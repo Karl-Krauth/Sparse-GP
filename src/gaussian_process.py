@@ -4,13 +4,15 @@ import numpy as np
 import random
 import scipy.linalg as la
 
+np.random.seed(1)
+random.seed(1)
+
 class GaussianProcess(object):
     def __init__(self,
                  kernels,
                  likelihood,
                  inducing_density,
                  num_components=10,
-                 num_samples=100,
                  num_gaussian_samples=40,
                  step_size=0.01,
                  stopping_threshold=0.0001):
@@ -18,7 +20,6 @@ class GaussianProcess(object):
         self._likelihood = likelihood
         self._inducing_density = inducing_density
         self._num_components = num_components
-        self._num_samples = num_samples
         self._num_latent = len(self._kernels)
         self._num_gaussian_samples = num_gaussian_samples
         self._step_size = step_size
@@ -54,7 +55,7 @@ class GaussianProcess(object):
         for i in xrange(self._num_components):
             for j in xrange(self._num_latent):
                 mog_covars[i, j] = np.eye(self._num_inducing)
-
+        print inducing_points
         # Pre-compute the covariance matrix of the inducing points and its
         # inverse and determinant. Since the matrices are block diagonal we
         # store them as num_latent seperate sub-matrices of size num_inducing *
@@ -76,7 +77,7 @@ class GaussianProcess(object):
         print inducing_covars_inverse
         inc = self._step_size + 1
         i = 0
-        while inc > self._step_size and i < 2:
+        while inc > self._step_size:# and i < 2:
             i += 1
             index = random.randint(0, num_training - 1)
             inc = self._mog_gradient_descent(mog_means,
@@ -136,7 +137,7 @@ class GaussianProcess(object):
         mog_covars += covars_grad
         mog_weights += weights_grad
         mog_proportions = np.exp(mog_weights) / np.sum(np.exp(mog_weights))
-              
+ 
         return max(np.linalg.norm(means_grad), np.linalg.norm(covars_grad),
                    np.linalg.norm(weights_grad))
 
@@ -163,7 +164,6 @@ class GaussianProcess(object):
 
         weights_grad = self._proportions_to_weights_grad(mog_weights,
                                                          proportions_grad)
-        """
         print "============================="
         print "========cross entropy========"
         print "============================="
@@ -172,7 +172,6 @@ class GaussianProcess(object):
         print "covars grad\n", covars_grad, "\n\n"
         print "weights grad\n", weights_grad
         print "proportions grad\n", proportions_grad, "\n\n"
-        """
         return (means_grad, covars_grad, weights_grad)
 
     def _entropy_grad(self, mog_means, mog_covars, mog_weights,
@@ -224,7 +223,6 @@ class GaussianProcess(object):
         weights_grad = self._proportions_to_weights_grad(mog_weights,
                                                          proportions_grad)
 
-        """
         print "============================="
         print "===========entropy==========="
         print "============================="
@@ -236,7 +234,7 @@ class GaussianProcess(object):
         print weights_grad
         print "props grad"
         print proportions_grad, "\n\n\n"
-        """
+
         return (means_grad, covars_grad, weights_grad)
 
     def _ell_grad(self, mog_means, mog_covars, mog_weights, mog_proportions,
@@ -247,15 +245,10 @@ class GaussianProcess(object):
         train_products = np.empty([self._num_latent, self._num_inducing])
         for i in xrange(self._num_latent):
             train_covars[i] = self._generate_covar_vector(train_input,
-                                                          inducing_points,
+                                                          inducing_points[i],
                                                           self._kernels[i])
             train_products[i] = train_covars[i].dot(inducing_covars_inv[i])
 
-
-        print "train input:"
-        print train_input
-        print "train output:"
-        print train_output
         means_grad = np.zeros(mog_means.shape)
         covars_grad = np.zeros(mog_covars.shape)
         proportions_grad = np.zeros(mog_proportions.shape)
@@ -269,39 +262,36 @@ class GaussianProcess(object):
                                  train_input) - train_products[j].
                                  dot(train_covars[j])) + train_products[j].
                                  dot(mog_covars[i, j]).dot(train_products[j]))
-            print "sample means: "
-            print sample_means
-            print "sample vars: "
-            print sample_vars
+
             # Generate the samples.
-            samples = np.empty([self._num_samples, self._num_latent])
-            for j in xrange(self._num_samples):
+            samples = np.empty([self._num_gaussian_samples, self._num_latent])
+            for j in xrange(self._num_gaussian_samples):
                 for k in xrange(self._num_latent):
                     samples[j, k] = np.random.normal(sample_means[k],
                                                      sample_vars[k])
-            #print "samples: ", samples
 
             # Now Calculate the gradients.
-            for j in xrange(self._num_samples):
+            for j in xrange(self._num_gaussian_samples):
                 for k in xrange(self._num_latent):
                     means_grad[i, k] += (
-                        (mog_proportions[i] / self._num_samples) *
+                        (mog_proportions[i] / self._num_gaussian_samples) *
                         (inducing_covars_inv[k].dot(train_covars[k]) /
                         sample_vars[k]) * (samples[j, k] - sample_means[k]) *
                         self._likelihood(train_output, samples[j]))
                     covars_grad[i, k] += (
-                        (mog_proportions[i] / (2.0 * self._num_samples)) *
+                        (mog_proportions[i] / (2.0 * self._num_gaussian_samples)) *
                         np.outer(train_products[k], train_products[k]) *
                         (np.power(sample_vars[k], -2) *
                         np.power((samples[j, k] - sample_means[k]), 2.0) -
                         1.0 / sample_vars[k]) * self._likelihood(train_output,
                         samples[j]))
                 proportions_grad[i] += (self._likelihood(train_output, 
-                                        samples[j]) / self._num_samples)
+                                        samples[j]) / self._num_gaussian_samples)
 
         weights_grad = self._proportions_to_weights_grad(mog_weights,
                                                          proportions_grad)
 
+        """
         print "============================="
         print "=============ELL============="
         print "============================="
@@ -313,6 +303,7 @@ class GaussianProcess(object):
         print weights_grad
         print "props grad"
         print proportions_grad, "\n\n\n"
+        """
         return (means_grad, covars_grad, weights_grad)
         
 
@@ -339,6 +330,7 @@ class GaussianProcess(object):
         num_points = points.shape[0]
         covar_vector = np.empty([num_points])
         for i in xrange(num_points):
+            print point, points[i]
             covar_vector[i] = kernel(point, points[i])
         return covar_vector
 
