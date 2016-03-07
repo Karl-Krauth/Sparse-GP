@@ -1,0 +1,7 @@
+{
+    "num_processes": 2,
+    "experiment_names": ["boston"],
+    "methods": ["mix1", "mix2", "full"],
+    "sparsity_factors": [0.1, 0.2, 0.5],
+    "run_ids": [1, 2, 3, 4, 5]
+}
