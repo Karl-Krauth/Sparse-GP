@@ -9,8 +9,6 @@ import numpy as np
 
 import setup_experiment
 
-import yappi
-
 EXPERIMENTS = {
     'boston': setup_experiment.boston_experiment,
     'wisconsin': setup_experiment.wisconsin_experiment,
@@ -22,9 +20,11 @@ EXPERIMENTS = {
     'mnist_binary': setup_experiment.mnist_binary_experiment,
     'mnist_binary_inducing': setup_experiment.mnist_binary_inducing_experiment,
     'sarcos': setup_experiment.sarcos_experiment,
+    'sarcos_inducing': setup_experiment.sarcos_inducing_experiment,
 }
 
 METHODS = ['mix1', 'mix2', 'full']
+
 
 def main():
     """Run the experiments requested by the user."""
@@ -37,12 +37,13 @@ def main():
             config = json.loads(config_file.read())
             run_parallel(**config)
     elif 'experiment_name' in args:
-        # Run a single experiment from commmandline arguments.
+        # Run a single experiment from command line arguments.
         experiment = EXPERIMENTS[args['experiment_name']]
         del args['experiment_name']
         experiment(**args)
     else:
         print 'You must either chose an experiment (-e) or a config file (-f).'
+
 
 def setup_args():
     """Get the commandline arguments and return them in a dictionary."""
@@ -65,6 +66,7 @@ def setup_args():
     parser.add_argument('-p', '--partition_size', type=int, default=argparse.SUPPRESS,
                         help='The size of sample partitions for a large scale experiment.')
     return vars(parser.parse_args())
+
 
 def run_parallel(num_processes, experiment_names, methods, sparsity_factors, run_ids):
     """
@@ -98,11 +100,13 @@ def run_parallel(num_processes, experiment_names, methods, sparsity_factors, run
     pool = Pool(num_processes)
     pool.map(run_config, experiment_configs)
 
+
 def run_config(config):
     """Runs an experiment under the given configuration."""
     experiment = EXPERIMENTS[config['experiment_name']]
     del config['experiment_name']
     experiment(**config)
+
 
 if __name__ == '__main__':
     main()

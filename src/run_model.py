@@ -1,12 +1,11 @@
 """
 Provides facility for fitting models to data, making predictions and exporting results to csv files.
 """
+import cPickle
 import os
-import pickle
 
 import model_logging
 import optimizer
-from diagonal_gaussian_process import DiagonalGaussianProcess
 from full_gaussian_process import FullGaussianProcess
 import util
 
@@ -131,25 +130,23 @@ def run_model(train_X,
     model_logging.init_logger(name)
     model_logging.logger.info('experiment started for:' + str(properties))
 
-    model_image = None
     if model_image_dir is not None:
         model_image_file_path = os.path.join(model_image_dir, 'model.dump')
         with open(model_image_file_path) as model_image_file:
-            model_image = pickle.load(model_image_file)
-
-    if model_image:
-        model_logging.logger.info('loaded model - iteration started from: ' +
-                                  str(opt_params['current_iter']))
-
-    if method == 'full':
+            model = cPickle.load(model_image_file)
+    elif method == 'full':
         model = FullGaussianProcess(train_X, train_Y, num_inducing, num_samples, kernel, cond_ll,
                                     latent_noise, False, random_Z,
-                                    num_threads=n_threads)
+                                    num_threads=n_threads, partition_size=partition_size)
     elif method == 'mix1' or method == 'mix2':
+        # TODO(karl): Add this back in once we've fixed the diagonal issues.
+        pass
+        """
         num_components = 1 if method == 'mix1' else 2
         model = DiagonalGaussianProcess(train_X, train_Y, num_inducing, num_components, num_samples,
                                         kernel, cond_ll, latent_noise, False, random_Z,
-                                        num_threads=n_threads)
+                                        num_threads=n_threads, partition_size=partition_size)
+        """
 
     properties['total_time'], properties['total_evals'] = optimizer.optimize_model(model, optimization_config, max_iter,
                                                                                    xtol, ftol)

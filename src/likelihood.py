@@ -281,7 +281,13 @@ class LogisticLL(object, Likelihood):
         self.normal_samples = np.random.normal(0, 1, self.n_samples).reshape((1, self.n_samples))
 
     def ll_F_Y(self, F, Y):
-        return -np.log(1 + np.exp(F * Y))[:, :, 0], None
+        result = -np.log(1 + np.exp(F * Y))[:, :, 0]
+        inf_indices = np.where(np.isinf(np.abs(result)))
+        if inf_indices[0].size > 0:
+            # Deal with the case where exp(f * y) is too large.
+            result[inf_indices] = -(F * Y)[:, :, 0][inf_indices]
+
+        return result, None
 
     def set_params(self, p):
         if p.shape[0] != 0:

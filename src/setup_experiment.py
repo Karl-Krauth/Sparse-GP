@@ -7,6 +7,7 @@ from kernel import ExtRBF
 import likelihood
 import run_model
 
+
 def boston_experiment(method, sparsity_factor, run_id):
     """
     Run the boston housing experiment.
@@ -38,8 +39,9 @@ def boston_experiment(method, sparsity_factor, run_id):
                                data_transformation.MeanTransformation,
                                True,
                                False,
-                               optimization_config={'mog': 25, 'hyp': 25, 'll': 25},
+                               optimization_config={'mog': 25, 'hyp': 25, 'll': 25, 'inducing': 8},
                                max_iter=200)
+
 
 def wisconsin_experiment(method, sparsity_factor, run_id):
     """
@@ -74,6 +76,7 @@ def wisconsin_experiment(method, sparsity_factor, run_id):
                                False,
                                optimization_config={'mog': 25, 'hyp': 25},
                                max_iter=200)
+
 
 def mining_experiment(method, sparsity_factor, run_id):
     """
@@ -111,6 +114,7 @@ def mining_experiment(method, sparsity_factor, run_id):
                                True,
                                optimization_config={'mog': 15000},
                                max_iter=1)
+
 
 def usps_experiment(method, sparsity_factor, run_id):
     """
@@ -268,6 +272,7 @@ def mnist_experiment(method, sparsity_factor, run_id,
                                model_image_dir=image,
                                partition_size=partition_size)
 
+
 def mnist_binary_experiment(method, sparsity_factor, run_id,
                             image=None, n_threads=1, partition_size=3000):
     """
@@ -300,12 +305,13 @@ def mnist_binary_experiment(method, sparsity_factor, run_id,
                                data_transformation.IdentityTransformation,
                                False,
                                False,
-                               optimization_config={'mog': 60, 'hyp': 15},
+                               optimization_config={'mog': 60, 'hyp': 15, 'inducing': 8},
                                max_iter=300,
                                n_threads=n_threads,
                                ftol=10,
                                model_image_dir=image,
                                partition_size=partition_size)
+
 
 def mnist_binary_inducing_experiment(method, sparsity_factor, run_id,
                                      image=None, n_threads=1, partition_size=3000):
@@ -346,6 +352,7 @@ def mnist_binary_inducing_experiment(method, sparsity_factor, run_id,
                                model_image_dir=image,
                                partition_size=partition_size)
 
+
 def sarcos_experiment(method, sparsity_factor, run_id,
                       image=None, n_threads=1, partition_size=3000):
     """
@@ -383,6 +390,46 @@ def sarcos_experiment(method, sparsity_factor, run_id,
                                partition_size=partition_size,
                                n_threads=n_threads,
                                model_image_dir=image)
+
+
+def sarcos_inducing_experiment(method, sparsity_factor, run_id,
+                              image=None, n_threads=1, partition_size=3000):
+    """
+    Run the sarcos experiment on two joints.
+
+    Parameters
+    ----------
+    method : str
+        The method under which to run the experiment (mix1, mix2, or full).
+    sparsity_factor : float
+        The sparsity of inducing points.
+    run_id : int
+        The id of the configuration.
+    """
+    name = 'sarcos'
+    data = data_source.sarcos_data()[run_id - 1]
+    kernel = get_kernels(data['train_X'].shape[1], 3, False)
+    cond_ll = likelihood.CogLL(0.1, 2, 1)
+
+    return run_model.run_model(data['train_X'],
+                               data['train_Y'],
+                               data['test_X'],
+                               data['test_Y'],
+                               cond_ll,
+                               kernel,
+                               method,
+                               name,
+                               data['id'],
+                               sparsity_factor,
+                               data_transformation.MeanStdYTransformation,
+                               True,
+                               False,
+                               optimization_config={'mog': 50, 'hyp': 10, 'll': 10, 'inducing': 6},
+                               max_iter=200,
+                               partition_size=partition_size,
+                               n_threads=n_threads,
+                               model_image_dir=image)
+
 
 def sarcos_all_joints_experiment(method, sparsity_factor, run_id,
                                  image=None, n_threads=1, partition_size=3000):
@@ -426,6 +473,7 @@ def sarcos_all_joints_experiment(method, sparsity_factor, run_id,
                                ftol=10,
                                n_threads=n_threads,
                                model_image_dir=image)
+
 
 def get_kernels(input_dim, num_latent_proc, ARD):
     return [ExtRBF(input_dim, variance=1, lengthscale=np.array((1.,)), ARD=ARD)

@@ -10,7 +10,7 @@ from GPy.util.linalg import mdot, dpotri
 import numpy as np
 
 
-class KernelMatrix(object):
+class PosDefMatrix(object):
     def __init__(self, num_latent, num_inducing):
         self.is_outdated = True
         self.matrix = np.empty([num_latent, num_inducing, num_inducing])
@@ -34,7 +34,7 @@ class KernelMatrix(object):
         self.is_outdated = True
 
 
-def average(condll, X, num_samples):
+def weighted_average(weights, points, num_samples):
     """
     calculates (condll * X).mean(axis=1) using variance reduction method.
 
@@ -51,16 +51,16 @@ def average(condll, X, num_samples):
     -------
     :returns: a matrix of dimension N
     """
-    X = X.T
-    condll = condll.T
+    points = points.T
+    weights = weights.T
     cvsamples = num_samples / 10
-    pz = X[:, 0:cvsamples]
-    py = np.multiply(condll[:, 0:cvsamples], pz)
+    pz = points[:, 0:cvsamples]
+    py = np.multiply(weights[:, 0:cvsamples], pz)
     above = np.multiply((py.T - py.mean(1)), pz.T).sum(axis=0) / (cvsamples - 1)
     below = np.square(pz).sum(axis=1) / (cvsamples - 1)
     cvopt = np.divide(above, below)
     cvopt = np.nan_to_num(cvopt)
-    grads = np.multiply(condll, X) - np.multiply(cvopt, X.T).T
+    grads = np.multiply(weights, points) - np.multiply(cvopt, points.T).T
 
     return grads.mean(axis=1)
 

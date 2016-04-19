@@ -181,8 +181,6 @@ class ExtRBF(RBF):
          dL\\dX, which is a matrix of dimension N * D
 
         """
-
-
         invdist = self._inv_dist(X, X2)
         dL_dr = self.dK_dr_via_X(X, X2) * A
         tmp = invdist*dL_dr

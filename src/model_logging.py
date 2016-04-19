@@ -1,12 +1,13 @@
 """This module provides facilities for logging and exporting information relevant to a model."""
 import csv
+import cPickle
 import datetime
 import logging
 import os
-import pickle
 
 import numpy as np
 
+import gaussian_process
 import util
 
 OUTPUT_PATH = '../results/'
@@ -165,7 +166,5 @@ def snapshot_model(model):
         return
 
     file_path = os.path.join(_log_folder_path, MODEL_FILE_NAME)
-    """
     with open(file_path, 'w') as model_file:
-        pickle.dump(model, model_file)
-    """
+        cPickle.dump(model, model_file, protocol=cPickle.HIGHEST_PROTOCOL)

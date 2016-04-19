@@ -1,17 +1,15 @@
 """This module contain utilities for optimizing the parameters of a gaussian process model."""
 
-from functools import partial
 import math
 import time
 
 import numpy as np
 from scipy.optimize import fmin_l_bfgs_b
 
+import gaussian_process
 import model_logging
 from util import JitChol
 
-# A list of possible sets of parameters ordered according to optimization ordering.
-PARAMETER_SETS = ['mog', 'll', 'hyp', 'inducing']
 # The parameter sets that must be bounded during optimization.
 PARAMETER_SETS_TO_BOUND = ['hyp', 'inducing']
 
@@ -50,7 +48,7 @@ def optimize_model(model, optimization_config, max_iterations=200, mog_threshold
             model_logging.logger.info('Iteration %d started.', current_iter)
 
             # Go through and optimize each set of parameters in optimization_config.
-            for parameter_set in PARAMETER_SETS:
+            for parameter_set in gaussian_process.PARAMETER_SETS:
                 if parameter_set in optimization_config:
                     model_logging.logger.info('Optimizing: %s', parameter_set)
                     model.set_optimization_method(parameter_set)
