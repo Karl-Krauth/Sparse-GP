@@ -6,6 +6,7 @@ import os
 
 import model_logging
 import optimizer
+from diagonal_gaussian_process import DiagonalGaussianProcess
 from full_gaussian_process import FullGaussianProcess
 import util
 
@@ -23,7 +24,7 @@ def run_model(train_X,
               random_Z,
               export_X,
               optimization_config={'mog': 25, 'hyp': 25, 'll': 25},
-              num_samples=2000,
+              num_samples=100,
               latent_noise=0.001,
               max_iter=200,
               n_threads=1,
@@ -139,17 +140,15 @@ def run_model(train_X,
                                     latent_noise, False, random_Z,
                                     num_threads=n_threads, partition_size=partition_size)
     elif method == 'mix1' or method == 'mix2':
-        # TODO(karl): Add this back in once we've fixed the diagonal issues.
-        pass
-        """
         num_components = 1 if method == 'mix1' else 2
         model = DiagonalGaussianProcess(train_X, train_Y, num_inducing, num_components, num_samples,
                                         kernel, cond_ll, latent_noise, False, random_Z,
                                         num_threads=n_threads, partition_size=partition_size)
-        """
+    else:
+        assert False
 
-    properties['total_time'], properties['total_evals'] = optimizer.optimize_model(model, optimization_config, max_iter,
-                                                                                   xtol, ftol)
+    properties['total_time'], properties['total_evals'] = optimizer.stochastic_optimize_model(
+        model, optimization_config, max_iter, xtol, ftol)
 
     model_logging.logger.debug("prediction started...")
     y_pred, var_pred, nlpd = model.predict(test_X, test_Y)

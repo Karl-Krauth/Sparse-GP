@@ -3,6 +3,8 @@ from GPy.util.linalg import mdot
 import numpy as np
 
 import gaussian_mixture
+import theano
+from theano import tensor
 import util
 
 
@@ -49,7 +51,15 @@ class FullGaussianMixture(gaussian_mixture.GaussianMixture):
         return log_normal
 
     def a_dot_covar_dot_a(self, a, component_index, latent_index):
-        return np.diagonal(mdot(a, self.covars[latent_index], a.T))
+        return self._theano_a_dot_covar_dot_a(a, self.covars[latent_index])
+
+    def _compile_a_dot_covar_dot_a():
+        a = tensor.matrix('a')
+        covar = tensor.matrix('covar')
+
+        result = tensor.sum(a * tensor.dot(a, covar), 1)
+        return theano.function([a, covar], result, allow_input_downcast=True)
+    _theano_a_dot_covar_dot_a = _compile_a_dot_covar_dot_a()
 
     def mean_prod_sum_covar(self, component_index, latent_index):
         assert component_index == 0
@@ -81,18 +91,33 @@ class FullGaussianMixture(gaussian_mixture.GaussianMixture):
     def grad_trace_a_dot_covars(self, A, component_index, latent_index):
         assert component_index == 0
         # TODO(karl): There is a bug here related to double counting.
-        tmp = 2 * mdot(A, self.covars_cholesky[latent_index])
+        tmp = self._theano_grad_trace_a_dot_covars(A, self.covars_cholesky[latent_index])
         tmp[np.diag_indices_from(tmp)] *= (
             self.covars_cholesky[latent_index][np.diag_indices_from(tmp)])
         return tmp[np.tril_indices_from(self.covars_cholesky[latent_index])]
 
+    def _compile_grad_trace_a_dot_covars():
+        A = tensor.matrix('A')
+        covars_cholesky = tensor.matrix('covars_cholesky')
+        result = 2.0 * tensor.dot(A, covars_cholesky)
+        return theano.function([A, covars_cholesky], result, allow_input_downcast=True)
+    _theano_grad_trace_a_dot_covars = _compile_grad_trace_a_dot_covars()
+
     def transform_covars_grad(self, internal_grad):
         grad = np.empty((self.num_latent, self.get_covar_size()))
         for j in range(self.num_latent):
-            tmp = util.chol_grad(self.covars_cholesky[j], internal_grad[0, j])
+            tmp = self._theano_transform_covars_grad(internal_grad[0, j],
+                                                     self.covars_cholesky[j])
             tmp[np.diag_indices_from(tmp)] *= self.covars_cholesky[j][np.diag_indices_from(tmp)]
             grad[j] = tmp[np.tril_indices_from(self.covars_cholesky[j])]
         return grad.flatten()
+
+    def _compile_transform_covars_grad():
+        internal_grad = tensor.matrix('internal_grad')
+        covars_cholesky = tensor.matrix('covars_cholesky')
+        result = tensor.dot(internal_grad + internal_grad.T, covars_cholesky)
+        return theano.function([internal_grad, covars_cholesky], result, allow_input_downcast=True)
+    _theano_transform_covars_grad = _compile_transform_covars_grad()
 
     def _get_raw_covars(self):
         flattened_covars = np.empty([self.num_latent, self.get_covar_size()])

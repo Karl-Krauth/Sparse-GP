@@ -1,7 +1,8 @@
 from GPy.kern import RBF
 from GPy.util.linalg import mdot
 import numpy as np
-from numpy.core.umath_tests import inner1d
+import theano
+import theano.tensor as tensor
 
 
 class ExtRBF(RBF):
@@ -10,6 +11,7 @@ class ExtRBF(RBF):
     hyper-parameters of the kernel. The base class provides a similar functionality, but that implementation can be
     slow when evaluating for multiple data points.
     """
+    white_noise = 0.001
 
     def get_gradients_AK(self, A, X, X2=None):
         r"""
@@ -38,7 +40,7 @@ class ExtRBF(RBF):
          dL\\dH, which is a matrix of dimension N * dim(H), where dim(H) is the number of hyper-parameters.
 
         """
-        variance_gradient = inner1d(self.K(X, X2), A) *  1./ self.variance
+        variance_gradient = np.core.umath_tests.inner1d(self.K(X, X2), A) *  1./ self.variance
 
         dL_dr = (self.dK_dr_via_X(X, X2) * A)
         if self.ARD:
@@ -52,6 +54,41 @@ class ExtRBF(RBF):
             lengthscale_gradient = lengthscale_gradient[np.newaxis, :]
 
         return np.hstack((variance_gradient[:, np.newaxis], lengthscale_gradient.T))
+
+    def kernel(self, points1, points2=None):
+        if points2 is None:
+            points2 = points1
+
+        if self.lengthscale.shape[0] == self.input_dim:
+            length_scale = self.lengthscale
+        else:
+            length_scale = self.lengthscale.repeat(self.input_dim)
+        kernel_value = self._theano_kernel(self.variance[0], length_scale, points1, points2)
+        if points1 is points2:
+            kernel_value += self.white_noise * np.eye(kernel_value.shape[0])
+
+        return kernel_value
+
+    def _compile_kernel():
+        variance = tensor.scalar('variance')
+        length_scale = tensor.vector('length_scale')
+        points1 = tensor.matrix('points1')
+        points2 = tensor.matrix('points2')
+
+        scaled_points1 = points1 / length_scale
+        scaled_points2 = points2 / length_scale
+        magnitude_square1 = tensor.sum(tensor.sqr(scaled_points1), 1)
+        magnitudes_square2 = tensor.sum(tensor.sqr(scaled_points2), 1)
+        distances = (magnitude_square1[:, None] - 2 * tensor.dot(scaled_points1, scaled_points2.T) +
+                     magnitudes_square2.T)
+
+        kernel_value = variance * tensor.exp(-distances / 2.0)
+        return theano.function([variance, length_scale, points1, points2], kernel_value,
+                               allow_input_downcast=True)
+    _theano_kernel = _compile_kernel()
+
+    def diag_kernel(self, points):
+        return (self.variance + self.white_noise) * np.ones(points.shape[0])
 
     def get_gradients_Kdiag(self, X):
         r"""
@@ -138,23 +175,35 @@ class ExtRBF(RBF):
         invdist = self._inv_dist(X, X2)
         dL_dr = self.dK_dr_via_X(X, X2)
         tmp = invdist*dL_dr
-        if X2 is None:
-            tmp = tmp + tmp.T
-            X2 = X
 
-        #The high-memory numpy way:
-        #d =  X[:, None, :] - X2[None, :, :]
-        #ret = np.sum(tmp[:,:,None]*d,1)/self.lengthscale**2
+        if self.lengthscale.shape[0] == self.input_dim:
+            length_scale = self.lengthscale
+        else:
+            length_scale = self.lengthscale.repeat(self.input_dim)
 
-        #the lower memory way with a loop
-        ret = np.empty(S.shape + (self.input_dim,))
-        for q in xrange(self.input_dim):
-            ret[:, :, q] = mdot(tmp * (X[:,q][:,None]-X2[:,q][None,:]), D).T * S + mdot(tmp * (X[:,q][:,None]-X2[:,q][None,:]), S.T).T * D.T
-        ret /= self.lengthscale**2
+        ret = self._theano_get_gradients_X_SKD(tmp, X, X2, S, D, length_scale)
 
         return ret
 
-    def get_gradients_X_AK(self, A, X, X2=None):
+    def _compile_get_gradients_X_SKD():
+        tmp = tensor.matrix('tmp')
+        X = tensor.matrix('X')
+        X2 = tensor.matrix('X2')
+        S = tensor.matrix('S')
+        D = tensor.matrix('D')
+        length_scale = tensor.vector('length_scale')
+
+        tmp2 = tmp[None, :, :] * (X.T[:, :, None] - X2.T[:, None, :])
+        ret = (theano.dot(tmp2, D).swapaxes(1, 2) * S[None, :, :] +
+               theano.dot(tmp2, S.T).swapaxes(1, 2) * D.T[None, :, :])
+        ret = ret.T.swapaxes(0, 1)
+        ret /= length_scale ** 2
+
+        return theano.function([tmp, X, X2, S, D, length_scale], ret, allow_input_downcast=True)
+
+    _theano_get_gradients_X_SKD = _compile_get_gradients_X_SKD()
+
+    def get_gradients_X_AK(self, A, X, X2):
         r"""
         Assume we have a function Ln of the kernel, which its gradient wrt to the location of X is as follows:
 
@@ -184,17 +233,24 @@ class ExtRBF(RBF):
         invdist = self._inv_dist(X, X2)
         dL_dr = self.dK_dr_via_X(X, X2) * A
         tmp = invdist*dL_dr
-        if X2 is None:
-            tmp = tmp + tmp.T
-            X2 = X
 
-        #The high-memory numpy way:
-        #d =  X[:, None, :] - X2[None, :, :]
-        #ret = np.sum(tmp[:,:,None]*d,1)/self.lengthscale**2
+        if self.lengthscale.shape[0] == self.input_dim:
+            length_scale = self.lengthscale
+        else:
+            length_scale = self.lengthscale.repeat(self.input_dim)
 
-        #the lower memory way with a loop
-        ret = np.empty(A.T.shape + (X.shape[1],), dtype=np.float64)
-        for q in xrange(self.input_dim):
-            ret[:,:,q] = (tmp*(X[:,q][:, None]-X2[:,q][None, :])).T
-        ret /= self.lengthscale**2
+        ret = self._theano_get_gradients_X_AK(tmp, X, X2, length_scale)
+
         return ret
+
+    def _compile_get_gradients_X_AK():
+        tmp = tensor.matrix('tmp')
+        X = tensor.matrix('X')
+        X2 = tensor.matrix('X2')
+        length_scale = tensor.vector('lengthscale')
+
+        ret = tmp.T[:, :, None] * (X[None, :, :] - X2[:, None, :])
+        ret /= length_scale ** 2
+
+        return theano.function([tmp, X, X2, length_scale], ret, allow_input_downcast=True)
+    _theano_get_gradients_X_AK = _compile_get_gradients_X_AK()

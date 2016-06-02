@@ -10,6 +10,8 @@ from scipy.special import erfinv
 from scipy.special._ufuncs import gammaln
 import numpy as np
 
+import theano
+from theano import tensor
 from util import cross_ent_normal
 
 
@@ -329,7 +331,14 @@ class SoftmaxLL(Likelihood):
             .reshape((self.dim, self.n_samples))
 
     def ll_F_Y(self, F, Y):
-        return -logsumexp(F - (F * Y).sum(2)[:, :, np.newaxis], 2), None
+        return self._theano_ll_F_Y(F, Y), None
+
+    def _compile_ll_F_Y():
+        F = tensor.tensor3('F')
+        Y = tensor.matrix('Y')
+        result = -tensor.log(tensor.sum(tensor.exp(F - tensor.sum(F * Y, 2)[:, :, np.newaxis]), 2))
+        return theano.function([F, Y], result, allow_input_downcast=True)
+    _theano_ll_F_Y = _compile_ll_F_Y()
 
     def predict(self, mu, sigma, Ys, model=None):
         F = np.empty((self.n_samples, mu.shape[0], self.dim))

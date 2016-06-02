@@ -4,6 +4,8 @@ import numpy as np
 
 import full_gaussian_mixture
 import gaussian_process
+import theano
+from theano import tensor
 import util
 
 
@@ -57,10 +59,16 @@ class FullGaussianProcess(gaussian_process.GaussianProcess):
         for i in xrange(self.num_latent):
             average = util.weighted_average(
                 conditional_ll, (normal_samples[i] ** 2 - 1) / sample_vars[i], self.num_samples)
-            grad[i] = (
-                0.5 * mdot(kernel_products[i].T * average, kernel_products[i]))
+            grad[i] = self._theano_grad_ell_over_covars(kernel_products[i], average)
 
         return grad
+
+    def _compile_grad_ell_over_covars():
+        kernel_products = tensor.matrix('kernel_products')
+        average = tensor.vector('average')
+        result = 0.5 * tensor.dot(kernel_products.T * average, kernel_products)
+        return theano.function([kernel_products, average], result, allow_input_downcast=True)
+    _theano_grad_ell_over_covars = _compile_grad_ell_over_covars()
 
     def _calculate_entropy(self):
         return -self.gaussian_mixture.log_normal()

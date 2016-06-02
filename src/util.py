@@ -23,7 +23,7 @@ class PosDefMatrix(object):
             return
 
         for i in xrange(len(kernels)):
-            self.matrix[i] = kernels[i].K(inducing_locations[i])
+            self.matrix[i] = kernels[i].kernel(inducing_locations[i])
             self.cholesky[i] = jitchol(self.matrix[i])
             self.inverse[i] = inv_chol(self.cholesky[i])
             self.log_determinant[i] = pddet(self.cholesky[i])
@@ -149,23 +149,6 @@ def inv_chol(L):
 
     Ai, _ = dpotri(np.asfortranarray(L), lower=1)
     return Ai
-
-
-def chol_grad(L, dM_dx):
-    """
-    Given that ``L`` is the Cholesky decomposition of x, and ``dM_dx`` is the gradient of M wrt to x,
-    then this function calculates dM \\ dL
-
-    L = cholesky (x)
-
-    Returns
-    -------
-    dM_dL : ndarray
-     dM \\ dL
-
-    """
-
-    return mdot(dM_dx+dM_dx.T, L)
 
 
 def log_diag_gaussian(m1, m2, s_log):
