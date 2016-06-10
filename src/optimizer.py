@@ -1,6 +1,7 @@
 """This module contain utilities for optimizing the parameters of a gaussian process model."""
 
 import math
+import threading
 import time
 
 import numpy as np
@@ -154,6 +155,18 @@ class BatchModelWrapper(object):
         return self._total_function_evals
 
 
+model_lock = threading.Lock()
+def save_model():
+    i = 0
+    global glob_mod
+    while True:
+        model_lock.acquire()
+        model_logging.snapshot_model(glob_mod, str(i) + ".dump")
+        model_lock.release()
+        i += 1
+        time.sleep(60 * 15)
+
+glob_mod = None
 def stochastic_optimize_model(model, optimization_config, max_iterations=200, mog_threshold=1e-4,
                               objective_threshold=1e-5, num_batches=1):
     """
@@ -182,22 +195,30 @@ def stochastic_optimize_model(model, optimization_config, max_iterations=200, mo
         defined by the model.
     """
     start = time.time()
+    global glob_mod
+    glob_mod = model
+    thread = threading.Thread(target=save_model)
+    thread.daemon = True
+    thread.start()
+
     current_iter = 1
     total_evaluations = 0
     checker = ConvergenceChecker(mog_threshold, objective_threshold)
 
     try:
-        while (not checker.is_converged() and
+        while True or (not checker.is_converged() and
                 (max_iterations is None or current_iter < max_iterations)):
             model_logging.logger.info('Iteration %d started.', current_iter)
             model.shuffle_data()
 
             # Go through and optimize each set of parameters in optimization_config.
+            i = 0
             for parameter_set in gaussian_process.PARAMETER_SETS:
                 if parameter_set in optimization_config:
                     model_logging.logger.info('Optimizing: %s', parameter_set)
                     model.set_optimization_method(parameter_set)
-                    total_evaluations += sgd(model, num_batches, optimization_config[parameter_set])
+                    total_evaluations += sgd(model, num_batches, optimization_config[parameter_set], i)
+                    i += 1
 
             # Update and save the state of the optimization.
             model_logging.snapshot_model(model)
@@ -208,12 +229,14 @@ def stochastic_optimize_model(model, optimization_config, max_iterations=200, mo
         model_logging.logger.info('Interrupted by the user.')
         model_logging.logger.info('Last objective value: %f', model.overall_objective_function())
 
+    thread.stop()
     end = time.time()
 
     return (end - start), total_evaluations
 
-
-def sgd(model, num_batches, max_passes):
+grad_rms = [0] * 10
+change_rms = [0] * 10
+def sgd(model, num_batches, max_passes, idx):
     """
     Optimise the model using mini-batch stochastic gradient descent.
 
@@ -228,8 +251,8 @@ def sgd(model, num_batches, max_passes):
     """
     num_evals = 0
     curr_train_index = 0
-    grad_rms = 0
-    change_rms = 0
+    global grad_rms
+    global change_rms
     eps = 1e-6
     decay_rate = 0.950
 
@@ -238,12 +261,13 @@ def sgd(model, num_batches, max_passes):
 
     for j in xrange(max_passes):
         for j in xrange(model.get_num_partitions() / num_batches):
+            model_lock.acquire()
             old_params = model.get_params()
-            grad_rms = (decay_rate * grad_rms + (1 - decay_rate) *
+            grad_rms[idx] = (decay_rate * grad_rms[idx] + (1 - decay_rate) *
                         model.objective_function_gradients() ** 2)
-            change = -(np.sqrt(change_rms + eps) / np.sqrt(grad_rms + eps) *
+            change = -(np.sqrt(change_rms[idx] + eps) / np.sqrt(grad_rms[idx] + eps) *
                        model.objective_function_gradients())
-            change_rms = decay_rate * change_rms + (1 - decay_rate) * change ** 2
+            change_rms[idx] = decay_rate * change_rms[idx] + (1 - decay_rate) * change ** 2
             new_params = old_params + change
 
             curr_train_index += num_batches
@@ -251,6 +275,7 @@ def sgd(model, num_batches, max_passes):
                 curr_train_index = 0
             model.set_train_partitions(curr_train_index, num_batches)
             model.set_params(new_params)
+            model_lock.release()
 
             model_logging.logger.debug('Objective: %.4f', model.objective_function())
             num_evals += 1

@@ -152,7 +152,7 @@ def export_configuration(config):
         writer.writerow(config)
 
 
-def snapshot_model(model):
+def snapshot_model(model, name=MODEL_FILE_NAME):
     """
     Save the current state of the model to be restored at a later date.
 
@@ -165,6 +165,6 @@ def snapshot_model(model):
         print "Warning: logger is not initialized."
         return
 
-    file_path = os.path.join(_log_folder_path, MODEL_FILE_NAME)
+    file_path = os.path.join(_log_folder_path, name)
     with open(file_path, 'w') as model_file:
         cPickle.dump(model, model_file, protocol=cPickle.HIGHEST_PROTOCOL)

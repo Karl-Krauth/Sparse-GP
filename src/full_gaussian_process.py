@@ -44,7 +44,7 @@ class FullGaussianProcess(gaussian_process.GaussianProcess):
 
     def _grad_cross_over_covars(self):
             grad = np.empty([self.num_components, self.num_latent,
-                             self.gaussian_mixture.get_covar_size()])
+                             self.gaussian_mixture.get_covar_size()], dtype=np.float32)
             for j in xrange(self.num_latent):
                 grad_trace = self.gaussian_mixture.grad_trace_a_dot_covars(
                     self.kernel_matrix.inverse[j], 0, j)
@@ -55,7 +55,8 @@ class FullGaussianProcess(gaussian_process.GaussianProcess):
     def _grad_ell_over_covars(self, component_index, conditional_ll, kernel_products,
                               sample_vars, normal_samples):
         assert (component_index == 0)
-        grad = np.empty([self.num_latent] + self.gaussian_mixture.get_covar_shape())
+        grad = np.empty([self.num_latent] + self.gaussian_mixture.get_covar_shape(),
+                        dtype=np.float32)
         for i in xrange(self.num_latent):
             average = util.weighted_average(
                 conditional_ll, (normal_samples[i] ** 2 - 1) / sample_vars[i], self.num_samples)
@@ -67,14 +68,14 @@ class FullGaussianProcess(gaussian_process.GaussianProcess):
         kernel_products = tensor.matrix('kernel_products')
         average = tensor.vector('average')
         result = 0.5 * tensor.dot(kernel_products.T * average, kernel_products)
-        return theano.function([kernel_products, average], result, allow_input_downcast=True)
+        return theano.function([kernel_products, average], result)
     _theano_grad_ell_over_covars = _compile_grad_ell_over_covars()
 
     def _calculate_entropy(self):
         return -self.gaussian_mixture.log_normal()
 
     def _grad_entropy_over_means(self):
-        return np.zeros([self.num_components, self.num_latent, self.num_inducing])
+        return np.zeros([self.num_components, self.num_latent, self.num_inducing], dtype=np.float32)
 
     def _grad_entropy_over_covars(self):
         return self.gaussian_mixture.transform_eye_grad()

@@ -2,12 +2,11 @@ import numpy as np
 from sklearn import preprocessing
 
 
-class DataTransformation:
+class DataTransformation(object):
     """
     A generic class for the transformation of data
     """
-
-    def __init__(self):
+    def __init__(self, X, Y):
         pass
 
     def transform_X(self, X):
@@ -68,12 +67,12 @@ class DataTransformation:
         raise NotImplementedError()
 
 
-class IdentityTransformation:
+class IdentityTransformation(DataTransformation):
     """
     Identity transformation. No transformation will be applied to data.
     """
 
-    def __init__(self):
+    def __init__(self, X ,Y):
         pass
 
     def transform_X(self, X):
@@ -91,23 +90,18 @@ class IdentityTransformation:
     def untransform_Y_var(self, Yvar):
         return Yvar
 
-    @staticmethod
-    def get_transformation(Y, X):
-        return IdentityTransformation()
-
     def untransform_NLPD(self, NLPD):
         return NLPD
 
 
-class MeanTransformation(object, DataTransformation):
+class MeanTransformation(DataTransformation):
     """
     Only transforms Y as follows:
     transformed Y = untransformed Y - mean(Y)
     """
 
-    def __init__(self, mean):
-        super(MeanTransformation, self).__init__()
-        self.mean = mean
+    def __init__(self, X, Y):
+        self.mean = Y.mean(axis=0)
 
     def transform_X(self, X):
         return X
@@ -127,54 +121,69 @@ class MeanTransformation(object, DataTransformation):
     def untransform_NLPD(self, NLPD):
         return NLPD
 
-    @staticmethod
-    def get_transformation(Y, X):
-        return MeanTransformation(Y.mean(axis=0))
 
-
-class MeanStdYTransformation(object, DataTransformation):
+class MeanStdYTransformation(DataTransformation):
     """
     Transforms only Y in a way that the transformed Y has mean = 0 and std =1
     """
 
-    def __init__(self, scalar):
-        super(MeanStdYTransformation, self).__init__()
-        self.scalar = scalar
+    def __init__(self, X, Y):
+        self.scaler = preprocessing.StandardScaler().fit(Y)
 
     def transform_X(self, X):
         return X
 
     def transform_Y(self, Y):
-        return self.scalar.transform(Y)
+        return self.scaler.transform(Y)
 
     def untransform_X(self, X):
         return X
 
     def untransform_Y(self, Y):
-        return self.scalar.inverse_transform(Y)
+        return self.scaler.inverse_transform(Y)
 
     def untransform_Y_var(self, Yvar):
         return Yvar
 
     def untransform_NLPD(self, NLPD):
-        return NLPD + np.hstack((np.array([np.log(self.scalar.std_).sum()]), np.log(self.scalar.std_)))
-
-    @staticmethod
-    def get_transformation(Y, X):
-        return MeanStdYTransformation(preprocessing.StandardScaler().fit(Y))
+        return NLPD + np.hstack((np.array([np.log(self.scaler.std_).sum()]), np.log(self.scaler.std_)))
 
 
-class MinTransformation(object, DataTransformation):
+class MeanStdTransformation(DataTransformation):
+    def __init__(self, X, Y):
+        self.input_scaler = preprocessing.StandardScaler().fit(X)
+        self.output_scaler = preprocessing.StandardScaler().fit(Y)
+
+    def transform_X(self, X):
+        return self.input_scaler.transform(X)
+
+    def transform_Y(self, Y):
+        return self.output_scaler.transform(Y)
+
+    def untransform_X(self, X):
+        return self.input_scaler.inverse_transform(X)
+
+    def untransform_Y(self, Y):
+        return self.output_scaler.inverse_transform(Y)
+
+    def untransform_Y_var(self, Yvar):
+        return Yvar
+
+    def untransform_NLPD(self, NLPD):
+        return NLPD + np.hstack([np.array([np.log(self.output_scaler.std_).sum()]),
+                                 np.log(self.output_scaler.std_)])
+
+
+class MinTransformation(DataTransformation):
     """
     Transforms only Y.
     transformed Y = (Y - min(Y)) / (max(Y) - min(Y)) - 0.5
     """
 
-    def __init__(self, min, max, offset):
-        super(MinTransformation, self).__init__()
-        self.min = min
-        self.max = max
-        self.offset = offset
+    def __init__(self, X, Y):
+        self.min = Y.min()
+        self.max = Y.max()
+        self.offset = 0.5
 
     def transform_X(self, X):
         return X
@@ -193,7 +202,3 @@ class MinTransformation(object, DataTransformation):
 
     def untransform_NLPD(self, NLPD):
         return NLPD + np.log(self.max - self.min)
-
-    @staticmethod
-    def get_transformation(Y, X):
-        return MinTransformation(Y.min(), Y.max(), 0.5)

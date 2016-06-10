@@ -113,6 +113,9 @@ class GaussianProcess(object):
                  inducing_on_inputs=False,
                  num_threads=1,
                  partition_size=3000):
+        train_inputs = train_inputs.astype(np.float32)
+        train_outputs = train_outputs.astype(np.float32)
+
         # Initialize variables to keep track of various model dimensions.
         self.num_latent = len(kernels)
         self.num_components = num_components
@@ -142,7 +145,7 @@ class GaussianProcess(object):
         self.inducing_locations, initial_mean = (
             self._initialize_inducing_points(train_inputs, train_outputs, inducing_on_inputs))
         self.gaussian_mixture = self._get_gaussian_mixture(initial_mean)
-        self.hyper_params = np.empty([self.num_latent, self.num_hyper_params])
+        self.hyper_params = np.empty([self.num_latent, self.num_hyper_params], dtype=np.float32)
 
         # Initialize the interim variables used to calculate parameters.
         self.cached_ell = None
@@ -207,7 +210,7 @@ class GaussianProcess(object):
             An array of values to set the model parameters to. Dimension varies according to the
             current optimization method.
         """
-        new_params = new_params.copy()
+        new_params = new_params.astype(np.float32)
         if self.optimization_method == 'mog':
             self.gaussian_mixture.set_params(new_params)
         elif self.optimization_method == 'hyp':
@@ -259,7 +262,7 @@ class GaussianProcess(object):
         return self.gaussian_mixture.get_means_and_covars()
 
     def overall_objective_function(self):
-        ell = 0
+        ell = np.float32(0.0)
         for input_partition, output_partition in zip(self.input_partitions, self.output_partitions):
             data_inducing_kernel, kernel_products, diag_conditional_covars = (
                 self._get_interim_matrices(input_partition))
@@ -270,6 +273,7 @@ class GaussianProcess(object):
                 normal_samples, sample_means, sample_vars, samples = (
                     self._get_samples(i, partition_size, kernel_products, diag_conditional_covars))
                 conditional_ll, _ = self.likelihood.ll_F_Y(samples, output_partition)
+                conditional_ll = conditional_ll.astype(np.float32)
 
                 # Now compute ell for this component.
                 ell += self._calculate_ell(i, output_partition, conditional_ll,
@@ -287,7 +291,7 @@ class GaussianProcess(object):
         float
             The current negative log likelihood value.
         """
-        ell = 0
+        ell = np.float32(0.0)
         input_partition = self.input_partitions[0]
         output_partition = self.output_partitions[0]
 
@@ -300,6 +304,7 @@ class GaussianProcess(object):
             normal_samples, sample_means, sample_vars, samples = (
                 self._get_samples(i, partition_size, kernel_products, diag_conditional_covars))
             conditional_ll, _ = self.likelihood.ll_F_Y(samples, output_partition)
+            conditional_ll = conditional_ll.astype(np.float32)
 
             # Now compute ell for this component.
             ell += self._calculate_ell(i, output_partition, conditional_ll,
@@ -338,8 +343,10 @@ class GaussianProcess(object):
         """
         # TODO(karl): Make this nicer.
         num_partitions = (self.num_data_points + self.partition_size - 1) / self.partition_size
+        test_inputs = test_inputs.astype(np.float32)
         input_partitions = np.array_split(test_inputs, num_partitions)
         if test_outputs is not None:
+            test_outputs = test_outputs.astype(np.float32)
             output_partitions = np.array_split(test_outputs, num_partitions)
         else:
             output_partitions = [None] * len(input_partitions)
@@ -390,8 +397,9 @@ class GaussianProcess(object):
             Initial value for the mean of the posterior distribution.
             Dimensions: num_inducing * num_latent.
         """
-        inducing_locations = np.zeros([self.num_latent, self.num_inducing, self.input_dim])
-        initial_mean = np.empty([self.num_latent, self.num_inducing])
+        inducing_locations = np.zeros([self.num_latent, self.num_inducing, self.input_dim],
+                                      dtype=np.float32)
+        initial_mean = np.empty([self.num_latent, self.num_inducing], dtype=np.float32)
 
         if inducing_on_inputs or self.num_inducing == self.num_data_points:
             # Initialize inducing points on training data.
@@ -536,10 +544,11 @@ class GaussianProcess(object):
             The gradient of the ell with respect to the weights of the mixture of Gaussians.
         """
         ell = 0
-        means_grad = np.empty([self.num_components, self.num_latent, self.num_inducing])
+        means_grad = np.empty([self.num_components, self.num_latent, self.num_inducing],
+                              dtype=np.float32)
         covars_grad = np.empty([self.num_components, self.num_latent] +
-                               self.gaussian_mixture.get_covar_shape())
-        weights_grad = np.empty(self.num_components)
+                               self.gaussian_mixture.get_covar_shape(), dtype=np.float32)
+        weights_grad = np.empty(self.num_components, dtype=np.float32)
         data_inducing_kernel, kernel_products, diag_conditional_covars = (
             self._get_interim_matrices(input_partition))
         for i in xrange(self.num_components):
@@ -548,6 +557,7 @@ class GaussianProcess(object):
             normal_samples, sample_means, sample_vars, samples = (
                 self._get_samples(i, partition_size, kernel_products, diag_conditional_covars))
             conditional_ll, _ = self.likelihood.ll_F_Y(samples, output_partition)
+            conditional_ll = conditional_ll.astype(np.float32)
 
             # Now compute gradients and ell for this component.
             ell += self._calculate_ell(
@@ -580,7 +590,7 @@ class GaussianProcess(object):
             The gradient of the ell with respect to the kernel hyper-parameters.
         """
         ell = 0
-        hyper_params_grad = np.zeros([self.num_latent, self.num_hyper_params])
+        hyper_params_grad = np.zeros([self.num_latent, self.num_hyper_params], dtype=np.float32)
         if self.num_data_points == self.num_inducing and self.cached_ell is not None:
             # The data is not sparse hence the gradient will be 0.
             return self.cached_ell, hyper_params_grad
@@ -594,6 +604,7 @@ class GaussianProcess(object):
             normal_samples, sample_means, sample_vars, samples = (
                 self._get_samples(i, partition_size, kernel_products, diag_conditional_covars))
             conditional_ll, _ = self.likelihood.ll_F_Y(samples, output_partition)
+            conditional_ll = conditional_ll.astype(np.float32)
 
             # Now compute gradients and ell for this component.
             ell += self._calculate_ell(
@@ -627,7 +638,7 @@ class GaussianProcess(object):
             The gradient of the ell with respect to the likelihood parameters.
         """
         ell = 0
-        likelihood_grad = np.zeros(self.num_likelihood_params)
+        likelihood_grad = np.zeros(self.num_likelihood_params, dtype=np.float32)
         data_inducing_kernel, kernel_products, diag_conditional_covars = (
             self._get_interim_matrices(input_partition))
 
@@ -637,6 +648,7 @@ class GaussianProcess(object):
             _, sample_means, sample_covars, samples = (
                 self._get_samples(i, partition_size, kernel_products, diag_conditional_covars))
             conditional_ll, curr_grad = self.likelihood.ll_F_Y(samples, output_partition)
+            conditional_ll = conditional_ll.astype(np.float32)
 
             # Now compute gradients and ell for this component.
             ell += self._calculate_ell(
@@ -665,7 +677,8 @@ class GaussianProcess(object):
             The gradient of the ell with respect to the inducing points.
         """
         ell = 0
-        inducing_grad = np.zeros([self.num_latent, self.num_inducing, self.input_dim])
+        inducing_grad = np.zeros([self.num_latent, self.num_inducing, self.input_dim],
+                                 dtype=np.float32)
         data_inducing_kernel, kernel_products, diag_conditional_covars = (
             self._get_interim_matrices(input_partition))
 
@@ -675,6 +688,7 @@ class GaussianProcess(object):
             normal_samples, sample_means, sample_vars, samples = (
                 self._get_samples(i, partition_size, kernel_products, diag_conditional_covars))
             conditional_ll, _ = self.likelihood.ll_F_Y(samples, output_partition)
+            conditional_ll = conditional_ll.astype(np.float32)
 
             # Now compute gradients and ell for this component.
             ell += self._calculate_ell(i, output_partition, conditional_ll,
@@ -699,10 +713,9 @@ class GaussianProcess(object):
         cross : float
             The value of the cross entropy.
         """
-        cross = 0
+        cross = np.float32(0)
         for i in xrange(self.num_components):
             cross += self.gaussian_mixture.weights[i] * grad_cross_over_weights[i]
-
         return cross
 
     def _grad_cross_over_means(self):
@@ -714,7 +727,7 @@ class GaussianProcess(object):
         grad : ndarray
             The value of the gradient. Dimensions: num_components * num_latent * num_inducing.
         """
-        grad = np.empty([self.num_components, self.num_latent, self.num_inducing])
+        grad = np.empty([self.num_components, self.num_latent, self.num_inducing], dtype=np.float32)
         for i in xrange(self.num_components):
             for j in xrange(self.num_latent):
                 grad[i, j] = -(self.gaussian_mixture.weights[i] *
@@ -734,7 +747,8 @@ class GaussianProcess(object):
             The value of the gradient.
         """
         grad = np.empty([
-            self.num_components, self.num_latent, self.gaussian_mixture.get_covar_size()])
+            self.num_components, self.num_latent, self.gaussian_mixture.get_covar_size()],
+            dtype=np.float32)
         for i in xrange(self.num_components):
             for j in xrange(self.num_latent):
                 grad_trace = self.gaussian_mixture.grad_trace_a_dot_covars(
@@ -753,7 +767,7 @@ class GaussianProcess(object):
         grad : ndarray
             The value of the gradient. Dimension: num_components.
         """
-        grad = np.zeros(self.num_components)
+        grad = np.zeros(self.num_components, dtype=np.float32)
         for i in xrange(self.num_components):
             for j in xrange(self.num_latent):
                 mean = self.gaussian_mixture.means[i, j]
@@ -774,7 +788,7 @@ class GaussianProcess(object):
         grad : ndarray
            The value of the gradient. Dimensions: num_latent * num_hyper_params.
         """
-        grad = np.empty([self.num_latent, self.num_hyper_params])
+        grad = np.empty([self.num_latent, self.num_hyper_params], dtype=np.float32)
         for i in xrange(self.num_latent):
             self.kernels_latent[i].update_gradients_full(self._grad_cross_over_kernel_matrix(i),
                                                          self.inducing_locations[i])
@@ -791,7 +805,7 @@ class GaussianProcess(object):
         grad : ndarray
             The value of the gradient. Dimensions: num_latent, num_inducing, input_dim.
         """
-        grad = np.empty([self.num_latent, self.num_inducing, self.input_dim])
+        grad = np.empty([self.num_latent, self.num_inducing, self.input_dim], dtype=np.float32)
         for i in xrange(self.num_latent):
             grad[i] = self.kernels_latent[i].gradients_X(self._grad_cross_over_kernel_matrix(i),
                                                          self.inducing_locations[i])
@@ -812,7 +826,7 @@ class GaussianProcess(object):
         grad : ndarray
             The value of the gradient. Dimensions: num_inducing * num_inducing.
         """
-        grad = np.zeros([self.num_inducing, self.num_inducing])
+        grad = np.zeros([self.num_inducing, self.num_inducing], dtype=np.float32)
         for i in xrange(self.num_components):
             kernel_inverse = self.kernel_matrix.inverse[latent_index]
             grad += (
@@ -896,17 +910,16 @@ class GaussianProcess(object):
         ell : float
             The value of the expected log likelihood.
         """
-        ell = 0
+        ell = np.float32(0.0)
         if self.is_exact_ell:
             for i in xrange(len(output_partition)):
                 unweighted_ell = self.likelihood.ell(sample_means[:, i], sample_vars[:, i],
                                                      output_partition[i])
                 ell += self.gaussian_mixture.weights[component_index] * unweighted_ell
         else:
-            ell = (self.gaussian_mixture.weights[component_index] * conditional_ll.sum() /
-                   self.num_samples)
-
-        return ell
+            ell = (self.gaussian_mixture.weights[component_index] *
+                   conditional_ll.sum() / self.num_samples)
+        return ell.astype(np.float32)
 
     def _grad_ell_over_means(self, component_index, conditional_ll,
                              data_inducing_kernel, sample_vars, normal_samples):
@@ -936,7 +949,7 @@ class GaussianProcess(object):
         grad : ndarray
             The value of the gradient. Dimensions: num_latent * num_inducing.
         """
-        grad = np.empty([self.num_latent, self.num_inducing])
+        grad = np.empty([self.num_latent, self.num_inducing], dtype=np.float32)
         for i in xrange(self.num_latent):
             mean = util.weighted_average(conditional_ll, normal_samples[i] / np.sqrt(sample_vars[i]),
                                          self.num_samples)
@@ -1009,7 +1022,7 @@ class GaussianProcess(object):
         grad : ndarray
             The value of the gradient. Dimensions: num_latent * num_hyper_params.
         """
-        hyper_params_grad = np.empty([self.num_latent, self.num_hyper_params])
+        hyper_params_grad = np.empty([self.num_latent, self.num_hyper_params], dtype=np.float32)
 
         for i in xrange(self.num_latent):
             grad_vars = self._grad_sample_vars_over_hyper_params(component_index, i,
@@ -1022,9 +1035,10 @@ class GaussianProcess(object):
 
             for j in xrange(self.num_hyper_params):
                 # TODO(karl): Name this something more meaningful or refactor.
-                val = (np.ones(conditional_ll.shape) / sample_vars[i] * grad_vars[:, j] -
-                       2.0 * normal_samples[i] / np.sqrt(sample_vars[i]) * grad_means[:, j] -
-                       np.square(normal_samples[i]) / sample_vars[i] * grad_vars[:, j])
+                val = (np.ones(conditional_ll.shape, dtype=np.float32) / sample_vars[i] *
+                       grad_vars[:, j] - 2.0 * normal_samples[i] / np.sqrt(sample_vars[i]) * 
+                       grad_means[:, j] - np.square(normal_samples[i]) / sample_vars[i] *
+                       grad_vars[:, j])
                 mean = util.weighted_average(conditional_ll, val, self.num_samples)
                 hyper_params_grad[i, j] = (
                     -1.0 / 2 * self.gaussian_mixture.weights[component_index] * mean.sum())
@@ -1064,7 +1078,7 @@ class GaussianProcess(object):
         grad : ndarray
             The value of the gradient. Dimensions: num_latent * num_inducing * input_dim.
         """
-        grad = np.empty([self.num_latent, self.num_inducing, self.input_dim])
+        grad = np.empty([self.num_latent, self.num_inducing, self.input_dim], dtype=np.float32)
         for i in xrange(self.num_latent):
             grad_means = self._grad_sample_means_over_inducing(component_index, i, input_partition,
                                                                kernel_products)
@@ -1097,7 +1111,7 @@ class GaussianProcess(object):
         gradient = -0.5 * weight * raw_gradient.mean(axis=0)
 
         return theano.function([weight, grad_means, grad_vars, conditional_ll, normal_samples,
-                               sample_vars], gradient, allow_input_downcast=True)
+                               sample_vars], gradient)
     _theano_grad_ell_over_inducing = _compile_grad_ell_over_inducing()
 
     def _grad_sample_means_over_hyper_params(self, component_index, latent_index, input_partition,
@@ -1309,31 +1323,20 @@ class GaussianProcess(object):
             Dimensions: num_latent * partition_size.
         """
         partition_size = input_partition.shape[0]
-        data_inducing_kernel = np.empty([self.num_latent, self.num_inducing, partition_size])
-        kernel_products = np.empty([self.num_latent, partition_size, self.num_inducing])
-        diag_conditional_covars = np.empty([self.num_latent, partition_size])
+        data_inducing_kernel = np.empty([self.num_latent, self.num_inducing, partition_size],
+                                        dtype=np.float32)
+        kernel_products = np.empty([self.num_latent, partition_size, self.num_inducing],
+                                   dtype=np.float32)
+        diag_conditional_covars = np.empty([self.num_latent, partition_size], dtype=np.float32)
 
         for j in xrange(self.num_latent):
             data_inducing_kernel[j] = self.kernels[j].kernel(self.inducing_locations[j],
                                                              input_partition)
-            diag_data_kernel = self.kernels[j].diag_kernel(input_partition)
-            kernel_products[j], diag_conditional_covars[j] = self._theano_get_interim_matrices(
-                self.kernel_matrix.inverse[j], data_inducing_kernel[j], diag_data_kernel)
+            kernel_products[j] = scipy.linalg.cho_solve((self.kernel_matrix.cholesky[j], True),
+                                                        data_inducing_kernel[j]).T
+            diag_conditional_covars[j] = (self.kernels[j].diag_kernel(input_partition) -
+                np.sum(kernel_products[j] * data_inducing_kernel[j].T, 1))
         return data_inducing_kernel, kernel_products, diag_conditional_covars
-
-    def _compile_get_interim_matrices():
-        kernel_matrix_inverse = tensor.matrix('kernel_matrix_inverse')
-        data_inducing_kernel = tensor.matrix('data_inducing_kernel')
-        diag_data_kernel = tensor.vector('diag_data_kernel')
-
-        kernel_products = tensor.dot(kernel_matrix_inverse, data_inducing_kernel).T
-        diag_conditional_covars = diag_data_kernel - tensor.sum(kernel_products *
-                                                                data_inducing_kernel.T, 1)
-
-        return theano.function([kernel_matrix_inverse, data_inducing_kernel, diag_data_kernel],
-                               [kernel_products, diag_conditional_covars],
-                               allow_input_downcast=True)
-    _theano_get_interim_matrices = _compile_get_interim_matrices()
 
     def _get_samples(self, component_index, partition_size, kernel_products,
                      diag_conditional_covars):
@@ -1367,10 +1370,11 @@ class GaussianProcess(object):
         samples : ndarray
             The generated samples. Dimensions: num_samples * partition_size * num_latent.
         """
-        normal_samples = np.empty([self.num_latent, self.num_samples, partition_size])
-        sample_means = np.empty([self.num_latent, partition_size])
-        sample_vars = np.empty([self.num_latent, partition_size])
-        samples = np.empty([self.num_samples, partition_size, self.num_latent])
+        normal_samples = np.empty([self.num_latent, self.num_samples, partition_size],
+                                  dtype=np.float32)
+        sample_means = np.empty([self.num_latent, partition_size], dtype=np.float32)
+        sample_vars = np.empty([self.num_latent, partition_size], dtype=np.float32)
+        samples = np.empty([self.num_samples, partition_size, self.num_latent], dtype=np.float32)
 
         for i in xrange(self.num_latent):
             kern_dot_covar_dot_kern = self.gaussian_mixture.a_dot_covar_dot_a(kernel_products[i],
@@ -1400,7 +1404,7 @@ class GaussianProcess(object):
 
         return theano.function([kernel_products, diag_conditional_covars, kern_dot_covars_dot_kern,
                                 gaussian_mixture_means, num_samples], [normal_samples, sample_means,
-                                sample_vars, samples], allow_input_downcast=True)
+                                sample_vars, samples])
     _theano_get_samples = _compile_get_samples()
 
     def _predict_partition(self, input_partition, output_partition):
@@ -1427,10 +1431,11 @@ class GaussianProcess(object):
         """
         partition_size = input_partition.shape[0]
         predicted_means = np.empty([
-            partition_size, self.num_components, self.likelihood.output_dim()])
+            partition_size, self.num_components, self.likelihood.output_dim()], dtype=np.float32)
         predicted_vars = np.empty([
-            partition_size, self.num_components, self.likelihood.output_dim()])
-        nlpd = np.empty([partition_size, self.likelihood.nlpd_dim(), self.num_components])
+            partition_size, self.num_components, self.likelihood.output_dim()], dtype=np.float32)
+        nlpd = np.empty([partition_size, self.likelihood.nlpd_dim(), self.num_components],
+                        dtype=np.float32)
         data_inducing_kernel, kernel_products, diag_conditional_covars = (
             self._get_interim_matrices(input_partition))
 

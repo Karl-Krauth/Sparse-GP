@@ -10,20 +10,20 @@ from diagonal_gaussian_process import DiagonalGaussianProcess
 from full_gaussian_process import FullGaussianProcess
 import util
 
-def run_model(train_X,
-              train_Y,
-              test_X,
-              test_Y,
+def run_model(train_inputs,
+              train_outputs,
+              test_inputs,
+              test_outputs,
               cond_ll,
               kernel,
               method,
               name,
               run_id,
               sparsity_factor,
-              trans_class,
+              transformer,
               random_Z,
               export_X,
-              optimization_config={'mog': 25, 'hyp': 25, 'll': 25},
+              optimization_config,
               num_samples=100,
               latent_noise=0.001,
               max_iter=200,
@@ -38,13 +38,13 @@ def run_model(train_X,
 
     Parameters
     ----------
-    train_X : ndarray
+    train_inputs : ndarray
         X of training points
-    train_Y : ndarray
+    train_outputs : ndarray
         Y of traiing points
-    test_X : ndarray
+    test_inputs : ndarray
         X of test points
-    test_Y : ndarray
+    test_outputs : ndarray
         Y of test points
     cond_ll : subclass of likelihood/Likelihood
         Conditional log likelihood function used to build the model.
@@ -101,13 +101,12 @@ def run_model(train_X,
     model : model
         the fitted model itself.
     """
-    transformer = trans_class.get_transformation(train_Y, train_X)
-    train_Y = transformer.transform_Y(train_Y)
-    test_Y = transformer.transform_Y(test_Y)
-    train_X = transformer.transform_X(train_X)
-    test_X = transformer.transform_X(test_X)
+    train_outputs = transformer.transform_Y(train_outputs)
+    test_outputs = transformer.transform_Y(test_outputs)
+    train_inputs = transformer.transform_X(train_inputs)
+    test_inputs = transformer.transform_X(test_inputs)
 
-    num_inducing = int(train_X.shape[0] * sparsity_factor)
+    num_inducing = int(train_inputs.shape[0] * sparsity_factor)
     git_hash, git_branch = util.get_git()
 
     properties = {
@@ -136,12 +135,12 @@ def run_model(train_X,
         with open(model_image_file_path) as model_image_file:
             model = cPickle.load(model_image_file)
     elif method == 'full':
-        model = FullGaussianProcess(train_X, train_Y, num_inducing, num_samples, kernel, cond_ll,
+        model = FullGaussianProcess(train_inputs, train_outputs, num_inducing, num_samples, kernel, cond_ll,
                                     latent_noise, False, random_Z,
                                     num_threads=n_threads, partition_size=partition_size)
     elif method == 'mix1' or method == 'mix2':
         num_components = 1 if method == 'mix1' else 2
-        model = DiagonalGaussianProcess(train_X, train_Y, num_inducing, num_components, num_samples,
+        model = DiagonalGaussianProcess(train_inputs, train_outputs, num_inducing, num_components, num_samples,
                                         kernel, cond_ll, latent_noise, False, random_Z,
                                         num_threads=n_threads, partition_size=partition_size)
     else:
@@ -151,14 +150,14 @@ def run_model(train_X,
         model, optimization_config, max_iter, xtol, ftol)
 
     model_logging.logger.debug("prediction started...")
-    y_pred, var_pred, nlpd = model.predict(test_X, test_Y)
+    y_pred, var_pred, nlpd = model.predict(test_inputs, test_outputs)
     model_logging.logger.debug("prediction finished")
 
-    model_logging.export_training_data(transformer.untransform_X(train_X),
-                                       transformer.untransform_Y(train_Y),
+    model_logging.export_training_data(transformer.untransform_X(train_inputs),
+                                       transformer.untransform_Y(train_outputs),
                                        export_X)
-    model_logging.export_predictions(transformer.untransform_X(test_X),
-                                     transformer.untransform_Y(test_Y),
+    model_logging.export_predictions(transformer.untransform_X(test_inputs),
+                                     transformer.untransform_Y(test_outputs),
                                      [transformer.untransform_Y(y_pred)],
                                      [transformer.untransform_Y_var(var_pred)],
                                      transformer.untransform_NLPD(nlpd),

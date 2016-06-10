@@ -38,8 +38,8 @@ def wisconsin_breast_cancer_data():
     Returns
     -------
     data : list
-        a list of length = 5, where each element is a dictionary which contains ``train_Y``,
-        ``train_X``, ``test_Y``, ``test_X``, and ``id``
+        a list of length = 5, where each element is a dictionary which contains ``train_outputs``,
+        ``train_inputs``, ``test_outputs``, ``test_inputs``, and ``id``
 
     Notes
     -----
@@ -55,10 +55,10 @@ def wisconsin_breast_cancer_data():
         train = pandas.read_csv('data/wisconsin_cancer/train_' + str(i) + '.csv', header=None)
         test = pandas.read_csv('data/wisconsin_cancer/test_' + str(i) + '.csv', header=None)
         data.append({
-            'train_Y': train.ix[:, 0].values[:, np.newaxis],
-            'train_X': train.ix[:, 1:].values,
-            'test_Y': test.ix[:, 0].values[:, np.newaxis],
-            'test_X': test.ix[:, 1:].values,
+            'train_outputs': train.ix[:, 0].values[:, np.newaxis],
+            'train_inputs': train.ix[:, 1:].values,
+            'test_outputs': test.ix[:, 0].values[:, np.newaxis],
+            'test_inputs': test.ix[:, 1:].values,
             'id': i
         })
 
@@ -72,8 +72,8 @@ def usps_data():
     Returns
     -------
     data : list
-        A list of length = 5, where each element is a dictionary which contains ``train_Y``,
-        ``train_X``, ``test_Y``, ``test_X``, and ``id``
+        A list of length = 5, where each element is a dictionary which contains ``train_outputs``,
+        ``train_inputs``, ``test_outputs``, ``test_inputs``, and ``id``
 
     References
     ----------
@@ -85,10 +85,10 @@ def usps_data():
         train = pandas.read_csv('data/USPS/train_' + str(i) + '.csv', header=None)
         test = pandas.read_csv('data/USPS/test_' + str(i) + '.csv', header=None)
         data.append({
-            'train_Y': train.ix[:, 0:2].values,
-            'train_X': train.ix[:, 3:].values,
-            'test_Y': test.ix[:, 0:2].values,
-            'test_X': test.ix[:, 3:].values,
+            'train_outputs': train.ix[:, 0:2].values,
+            'train_inputs': train.ix[:, 3:].values,
+            'test_outputs': test.ix[:, 0:2].values,
+            'test_inputs': test.ix[:, 3:].values,
             'id': i
         })
 
@@ -102,8 +102,8 @@ def mining_data():
     Returns
     -------
     data : list
-        A list of length = 1, where each element is a dictionary which contains ``train_Y``,
-        ``train_X``, ``test_Y``, ``test_X``, and ``id``. Training and test points are the same.
+        A list of length = 1, where each element is a dictionary which contains ``train_outputs``,
+        ``train_inputs``, ``test_outputs``, ``test_inputs``, and ``id``. Training and test points are the same.
 
     References
     ----------
@@ -113,10 +113,10 @@ def mining_data():
     data = []
     train = pandas.read_csv('data/mining/data.csv', header=None)
     data.append({
-        'train_Y': train.ix[:, 0].values[:, np.newaxis],
-        'train_X': train.ix[:, 1].values[:, np.newaxis],
-        'test_Y': train.ix[:, 0].values[:, np.newaxis],
-        'test_X': train.ix[:, 1].values[:, np.newaxis],
+        'train_outputs': train.ix[:, 0].values[:, np.newaxis],
+        'train_inputs': train.ix[:, 1].values[:, np.newaxis],
+        'test_outputs': train.ix[:, 0].values[:, np.newaxis],
+        'test_inputs': train.ix[:, 1].values[:, np.newaxis],
         'id': 1
     })
 
@@ -130,7 +130,7 @@ def boston_data():
     -------
     data : list
         A list of length = 5, where each element is a dictionary which contains
-        ``train_Y``, ``train_X``, ``test_Y``, ``test_X``, and ``id``
+        ``train_outputs``, ``train_inputs``, ``test_outputs``, ``test_inputs``, and ``id``
 
     References
     ----------
@@ -142,10 +142,10 @@ def boston_data():
         train = pandas.read_csv('data/boston_housing/train_' + str(i) + '.csv', header=None)
         test = pandas.read_csv('data/boston_housing/test_' + str(i) + '.csv', header=None)
         data.append({
-            'train_Y': train.ix[:, 0].values[:, np.newaxis],
-            'train_X': train.ix[:, 1:].values,
-            'test_Y': test.ix[:, 0].values[:, np.newaxis],
-            'test_X': test.ix[:, 1:].values,
+            'train_outputs': train.ix[:, 0].values[:, np.newaxis],
+            'train_inputs': train.ix[:, 1:].values,
+            'test_outputs': test.ix[:, 0].values[:, np.newaxis],
+            'test_inputs': test.ix[:, 1:].values,
             'id': i
         })
 
@@ -158,8 +158,8 @@ def abalone_data():
     Returns
     -------
     data : list
-        A list of length = 5, where each element is a dictionary which contains ``train_Y``,
-        ``train_X``, ``test_Y``, ``test_X``, and ``id``
+        A list of length = 5, where each element is a dictionary which contains ``train_outputs``,
+        ``train_inputs``, ``test_outputs``, ``test_inputs``, and ``id``
 
 
     References
@@ -172,10 +172,10 @@ def abalone_data():
         train = pandas.read_csv('data/abalone/train_' + str(i) + '.csv', header=None)
         test = pandas.read_csv('data/abalone/test_' + str(i) + '.csv', header=None)
         data.append({
-            'train_Y': train.ix[:, 0].values[:, np.newaxis],
-            'train_X': train.ix[:, 1:].values,
-            'test_Y': test.ix[:, 0].values[:, np.newaxis],
-            'test_X': test.ix[:, 1:].values,
+            'train_outputs': train.ix[:, 0].values[:, np.newaxis],
+            'train_inputs': train.ix[:, 1:].values,
+            'test_outputs': test.ix[:, 0].values[:, np.newaxis],
+            'test_inputs': test.ix[:, 1:].values,
             'id': i
         })
 
@@ -188,8 +188,8 @@ def creep_data():
     Returns
     -------
     data : list
-        A list of length = 5, where each element is a dictionary which contains ``train_Y``,
-        ``train_X``, ``test_Y``, ``test_X``, and ``id``
+        A list of length = 5, where each element is a dictionary which contains ``train_outputs``,
+        ``train_inputs``, ``test_outputs``, ``test_inputs``, and ``id``
 
     References
     ----------
@@ -201,10 +201,10 @@ def creep_data():
         train = pandas.read_csv('data/creep/train_' + str(i) + '.csv', header=None)
         test = pandas.read_csv('data/creep/test_' + str(i) + '.csv', header=None)
         data.append({
-            'train_Y': train.ix[:, 0].values[:, np.newaxis],
-            'train_X': train.ix[:, 1:].values,
-            'test_Y': test.ix[:, 0].values[:, np.newaxis],
-            'test_X': test.ix[:, 1:].values,
+            'train_outputs': train.ix[:, 0].values[:, np.newaxis],
+            'train_inputs': train.ix[:, 1:].values,
+            'test_outputs': test.ix[:, 0].values[:, np.newaxis],
+            'test_inputs': test.ix[:, 1:].values,
             'id': i
         })
 
@@ -217,8 +217,8 @@ def mnist_data():
     Returns
     -------
     data : list
-        A list of length = 1, where each element is a dictionary which contains ``train_Y``,
-        ``train_X``, ``test_Y``, ``test_X``, and ``id``
+        A list of length = 1, where each element is a dictionary which contains ``train_outputs``,
+        ``train_inputs``, ``test_outputs``, ``test_inputs``, and ``id``
 
     References
     ----------
@@ -248,19 +248,19 @@ def mnist_data():
     with gzip.open(dataset, 'rb') as data_file:
         train_set, valid_set, test_set = cPickle.load(data_file)
 
-    test_Y = np.zeros((test_set[1].shape[0], 10))
-    test_Y[np.arange(test_set[1].shape[0]), test_set[1]] = 1
-    train_Y = np.zeros((train_set[1].shape[0], 10))
-    train_Y[np.arange(train_set[1].shape[0]), train_set[1]] = 1
+    test_outputs = np.zeros((test_set[1].shape[0], 10))
+    test_outputs[np.arange(test_set[1].shape[0]), test_set[1]] = 1
+    train_outputs = np.zeros((train_set[1].shape[0], 10))
+    train_outputs[np.arange(train_set[1].shape[0]), train_set[1]] = 1
     validation_Y = np.zeros((valid_set[1].shape[0], 10))
     validation_Y[np.arange(valid_set[1].shape[0]), valid_set[1]] = 1
 
     data = []
     data.append({
-        'train_Y': np.vstack((train_Y, validation_Y)),
-        'train_X': np.vstack((train_set[0], valid_set[0])),
-        'test_Y': test_Y,
-        'test_X': test_set[0],
+        'train_outputs': np.vstack((train_outputs, validation_Y)),
+        'train_inputs': np.vstack((train_set[0], valid_set[0])),
+        'test_outputs': test_outputs,
+        'test_inputs': test_set[0],
         'id': 0
     })
 
@@ -273,8 +273,8 @@ def mnist_binary_data():
     Returns
     -------
     data : list
-        A list of length = 1, where each element is a dictionary which contains ``train_Y``,
-        ``train_X``, ``test_Y``, ``test_X``, and ``id``
+        A list of length = 1, where each element is a dictionary which contains ``train_outputs``,
+        ``train_inputs``, ``test_outputs``, ``test_inputs``, and ``id``
 
     References
     ----------
@@ -283,10 +283,10 @@ def mnist_binary_data():
     data = mnist_data()
     # Transform the labels to be -1 on even numbers and 1 on odd.
     to_bin = lambda x: x[1:10:2].sum() - x[0:10:2].sum()
-    data[0]['train_Y'] = np.apply_along_axis(
-        to_bin, 1, data[0]['train_Y']).astype(int)[:, np.newaxis]
-    data[0]['test_Y'] = np.apply_along_axis(
-        to_bin, 1, data[0]['test_Y']).astype(int)[:, np.newaxis]
+    data[0]['train_outputs'] = np.apply_along_axis(
+        to_bin, 1, data[0]['train_outputs']).astype(int)[:, np.newaxis]
+    data[0]['test_outputs'] = np.apply_along_axis(
+        to_bin, 1, data[0]['test_outputs']).astype(int)[:, np.newaxis]
 
     return data
 
@@ -297,8 +297,8 @@ def sarcos_data():
     Returns
     -------
     data : list
-        A list of length = 1, where each element is a dictionary which contains ``train_Y``,
-        ``train_X``, ``test_Y``, ``test_X``, and ``id``
+        A list of length = 1, where each element is a dictionary which contains ``train_outputs``,
+        ``train_inputs``, ``test_outputs``, ``test_inputs``, and ``id``
 
     References
     ----------
@@ -310,10 +310,10 @@ def sarcos_data():
     train = pandas.read_csv('data/sarcos/train_' +'.csv', header=None)
     test = pandas.read_csv('data/sarcos/test_' + '.csv', header=None)
     data.append({
-        'train_Y': train.ix[:, 0:1].values,
-        'train_X': train.ix[:, 2:].values,
-        'test_Y': test.ix[:, 0:1].values,
-        'test_X': test.ix[:, 2:].values,
+        'train_outputs': train.ix[:, 0:1].values,
+        'train_inputs': train.ix[:, 2:].values,
+        'test_outputs': test.ix[:, 0:1].values,
+        'test_inputs': test.ix[:, 2:].values,
         'id': 0
     })
 
@@ -326,8 +326,8 @@ def sarcos_all_joints_data():
     Returns
     -------
     data : list
-        A list of length = 1, where each element is a dictionary which contains ``train_Y``,
-        ``train_X``, ``test_Y``, ``test_X``, and ``id``
+        A list of length = 1, where each element is a dictionary which contains ``train_outputs``,
+        ``train_inputs``, ``test_outputs``, ``test_inputs``, and ``id``
 
     References
     ----------
@@ -339,11 +339,22 @@ def sarcos_all_joints_data():
     train = pandas.read_csv('data/sarcos/train_all' +'.csv', header=None)
     test = pandas.read_csv('data/sarcos/test_all' + '.csv', header=None)
     data.append({
-        'train_Y': train.ix[:, 0:6].values,
-        'train_X': train.ix[:, 7:].values,
-        'test_Y': test.ix[:, 0:6].values,
-        'test_X': test.ix[:, 7:].values,
+        'train_outputs': train.ix[:, 0:6].values,
+        'train_inputs': train.ix[:, 7:].values,
+        'test_outputs': test.ix[:, 0:6].values,
+        'test_inputs': test.ix[:, 7:].values,
         'id': 0
     })
 
     return data
+
+def airline_data():
+    train = pandas.read_csv('data/airline/train.csv', header=None)
+    test = pandas.read_csv('data/airline/test.csv', header=None)
+    return [{
+        'train_outputs': train.ix[:, 8:].values,
+        'train_inputs': train.ix[:, :7].values,
+        'test_outputs': test.ix[:, 8:].values,
+        'test_inputs': test.ix[:, :7].values,
+        'id': 0
+    }]

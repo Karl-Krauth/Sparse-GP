@@ -10,6 +10,7 @@ import numpy as np
 import setup_experiment
 
 EXPERIMENTS = {
+    'airline': setup_experiment.airline_experiment,
     'boston': setup_experiment.boston_experiment,
     'wisconsin': setup_experiment.wisconsin_experiment,
     'mining': setup_experiment.mining_experiment,

@@ -53,7 +53,7 @@ class ExtRBF(RBF):
             lengthscale_gradient = -np.sum(dL_dr*r, axis=1)/self.lengthscale
             lengthscale_gradient = lengthscale_gradient[np.newaxis, :]
 
-        return np.hstack((variance_gradient[:, np.newaxis], lengthscale_gradient.T))
+        return np.hstack((variance_gradient[:, np.newaxis], lengthscale_gradient.T)).astype(np.float32)
 
     def kernel(self, points1, points2=None):
         if points2 is None:
@@ -63,9 +63,9 @@ class ExtRBF(RBF):
             length_scale = self.lengthscale
         else:
             length_scale = self.lengthscale.repeat(self.input_dim)
-        kernel_value = self._theano_kernel(self.variance[0], length_scale, points1, points2)
+        kernel_value = self._theano_kernel(self.variance[0], length_scale.astype(np.float32), points1, points2)
         if points1 is points2:
-            kernel_value += self.white_noise * np.eye(kernel_value.shape[0])
+            kernel_value += self.white_noise * np.eye(kernel_value.shape[0], dtype=np.float32)
 
         return kernel_value
 
@@ -83,12 +83,11 @@ class ExtRBF(RBF):
                      magnitudes_square2.T)
 
         kernel_value = variance * tensor.exp(-distances / 2.0)
-        return theano.function([variance, length_scale, points1, points2], kernel_value,
-                               allow_input_downcast=True)
+        return theano.function([variance, length_scale, points1, points2], kernel_value)
     _theano_kernel = _compile_kernel()
 
     def diag_kernel(self, points):
-        return (self.variance + self.white_noise) * np.ones(points.shape[0])
+        return (self.variance.astype(np.float32) + self.white_noise) * np.ones(points.shape[0], dtype=np.float32)
 
     def get_gradients_Kdiag(self, X):
         r"""
@@ -110,7 +109,7 @@ class ExtRBF(RBF):
         """
 
         variance_gradient = self.Kdiag(X) * 1./self.variance
-        return np.hstack((variance_gradient[:, np.newaxis], np.zeros((X.shape[0], self.lengthscale.shape[0]))))
+        return np.hstack((variance_gradient[:, np.newaxis], np.zeros((X.shape[0], self.lengthscale.shape[0])))).astype(np.float32)
 
     def get_gradients_SKD(self, S, D, X, X2=None):
         r"""
@@ -147,7 +146,7 @@ class ExtRBF(RBF):
         else:
             lengthscale_gradient = np.diagonal(-mdot(S, (self._scaled_dist(X, X2) * self.dK_dr_via_X(X, X2)).T, D) / self.lengthscale)[:, np.newaxis]
 
-        return np.hstack((np.diagonal(variance_gradient)[:, np.newaxis], lengthscale_gradient))
+        return np.hstack((np.diagonal(variance_gradient)[:, np.newaxis], lengthscale_gradient)).astype(np.float32)
 
     def get_gradients_X_SKD(self, S, D, X):
         r"""
@@ -181,7 +180,7 @@ class ExtRBF(RBF):
         else:
             length_scale = self.lengthscale.repeat(self.input_dim)
 
-        ret = self._theano_get_gradients_X_SKD(tmp, X, X2, S, D, length_scale)
+        ret = self._theano_get_gradients_X_SKD(tmp.astype(np.float32), X, X2, S, D, length_scale.astype(np.float32))
 
         return ret
 
@@ -199,7 +198,7 @@ class ExtRBF(RBF):
         ret = ret.T.swapaxes(0, 1)
         ret /= length_scale ** 2
 
-        return theano.function([tmp, X, X2, S, D, length_scale], ret, allow_input_downcast=True)
+        return theano.function([tmp, X, X2, S, D, length_scale], ret)
 
     _theano_get_gradients_X_SKD = _compile_get_gradients_X_SKD()
 
@@ -239,7 +238,7 @@ class ExtRBF(RBF):
         else:
             length_scale = self.lengthscale.repeat(self.input_dim)
 
-        ret = self._theano_get_gradients_X_AK(tmp, X, X2, length_scale)
+        ret = self._theano_get_gradients_X_AK(tmp.astype(np.float32), X, X2, length_scale.astype(np.float32))
 
         return ret
 
@@ -252,5 +251,5 @@ class ExtRBF(RBF):
         ret = tmp.T[:, :, None] * (X[None, :, :] - X2[:, None, :])
         ret /= length_scale ** 2
 
-        return theano.function([tmp, X, X2, length_scale], ret, allow_input_downcast=True)
+        return theano.function([tmp, X, X2, length_scale], ret)
     _theano_get_gradients_X_AK = _compile_get_gradients_X_AK()

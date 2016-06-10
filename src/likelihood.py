@@ -336,7 +336,9 @@ class SoftmaxLL(Likelihood):
     def _compile_ll_F_Y():
         F = tensor.tensor3('F')
         Y = tensor.matrix('Y')
-        result = -tensor.log(tensor.sum(tensor.exp(F - tensor.sum(F * Y, 2)[:, :, np.newaxis]), 2))
+        inner_val = F - tensor.sum(F * Y, 2)[:, :, np.newaxis]
+        max_val = tensor.max(inner_val, 2)
+        result = -(tensor.log(tensor.sum(tensor.exp(inner_val - max_val[:, :, np.newaxis]), 2)) + max_val)
         return theano.function([F, Y], result, allow_input_downcast=True)
     _theano_ll_F_Y = _compile_ll_F_Y()
 

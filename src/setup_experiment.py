@@ -23,20 +23,21 @@ def boston_experiment(method, sparsity_factor, run_id):
     """
     name = 'boston'
     data = data_source.boston_data()[run_id - 1]
-    kernel = get_kernels(data['train_X'].shape[1], 1, True)
+    kernel = get_kernels(data['train_inputs'].shape[1], 1, True)
     cond_ll = likelihood.UnivariateGaussian(np.array(1.0))
+    transform = data_transformation.MeanTransformation(data['train_inputs'], data['train_outputs'])
 
-    return run_model.run_model(data['train_X'],
-                               data['train_Y'],
-                               data['test_X'],
-                               data['test_Y'],
+    return run_model.run_model(data['train_inputs'],
+                               data['train_outputs'],
+                               data['test_inputs'],
+                               data['test_outputs'],
                                cond_ll,
                                kernel,
                                method,
                                name,
                                data['id'],
                                sparsity_factor,
-                               data_transformation.MeanTransformation,
+                               transform,
                                True,
                                False,
                                optimization_config={'mog': 25, 'hyp': 25, 'll': 25, 'inducing': 8},
@@ -58,20 +59,22 @@ def wisconsin_experiment(method, sparsity_factor, run_id):
     """
     name = 'breast_cancer'
     data = data_source.wisconsin_breast_cancer_data()[run_id - 1]
-    kernel = get_kernels(data['train_X'].shape[1], 1, False)
+    kernel = get_kernels(data['train_inputs'].shape[1], 1, False)
     cond_ll = likelihood.LogisticLL()
+    transform = data_transformation.IdentityTransformation(data['train_inputs'],
+                                                           data['train_outputs'])
 
-    return run_model.run_model(data['train_X'],
-                               data['train_Y'],
-                               data['test_X'],
-                               data['test_Y'],
+    return run_model.run_model(data['train_inputs'],
+                               data['train_outputs'],
+                               data['test_inputs'],
+                               data['test_outputs'],
                                cond_ll,
                                kernel,
                                method,
                                name,
                                data['id'],
                                sparsity_factor,
-                               data_transformation.IdentityTransformation,
+                               transform,
                                True,
                                False,
                                optimization_config={'mog': 25, 'hyp': 25},
@@ -93,23 +96,24 @@ def mining_experiment(method, sparsity_factor, run_id):
     """
     name = 'mining'
     data = data_source.mining_data()[run_id - 1]
-    kernel = get_kernels(data['train_X'].shape[1], 1, False)
+    kernel = get_kernels(data['train_inputs'].shape[1], 1, False)
     cond_ll = likelihood.LogGaussianCox(np.log(191. / 811))
-
+    transform = data_transformation.IdentityTransformation(data['train_inputs'],
+                                                           data['train_outputs'])
     kernel[0].variance = 1.0
     kernel[0].lengthscale = 13516.0
 
-    return run_model.run_model(data['train_X'],
-                               data['train_Y'],
-                               data['test_X'],
-                               data['test_Y'],
+    return run_model.run_model(data['train_inputs'],
+                               data['train_outputs'],
+                               data['test_inputs'],
+                               data['test_outputs'],
                                cond_ll,
                                kernel,
                                method,
                                name,
                                data['id'],
                                sparsity_factor,
-                               data_transformation.IdentityTransformation,
+                               transform,
                                True,
                                True,
                                optimization_config={'mog': 15000},
@@ -131,21 +135,23 @@ def usps_experiment(method, sparsity_factor, run_id):
     """
     name = 'usps'
     data = data_source.usps_data()[run_id - 1]
-    kernel = [ExtRBF(data['train_X'].shape[1], variance=2, lengthscale=np.array((4.,)), ARD=False)
+    kernel = [ExtRBF(data['train_inputs'].shape[1], variance=2, lengthscale=np.array((4.,)), ARD=False)
               for _ in range(3)]
     cond_ll = likelihood.SoftmaxLL(3)
+    transform = data_transformation.IdentityTransformation(data['train_inputs'],
+                                                           data['train_outputs'])
 
-    return run_model.run_model(data['train_X'],
-                               data['train_Y'],
-                               data['test_X'],
-                               data['test_Y'],
+    return run_model.run_model(data['train_inputs'],
+                               data['train_outputs'],
+                               data['test_inputs'],
+                               data['test_outputs'],
                                cond_ll,
                                kernel,
                                method,
                                name,
                                data['id'],
                                sparsity_factor,
-                               data_transformation.IdentityTransformation,
+                               transform,
                                True,
                                False,
                                optimization_config={'mog': 25, 'hyp': 25},
@@ -167,23 +173,24 @@ def abalone_experiment(method, sparsity_factor, run_id):
     """
     name = 'abalone'
     data = data_source.abalone_data()[run_id - 1]
-    kernel = get_kernels(data['train_X'].shape[1], 1, False)
+    kernel = get_kernels(data['train_inputs'].shape[1], 1, False)
     cond_ll = likelihood.WarpLL(np.array([-2.0485, 1.7991, 1.5814]),
                                 np.array([2.7421, 0.9426, 1.7804]),
                                 np.array([0.1856, 0.7024, -0.7421]),
                                 np.log(0.1))
+    transform = data_transformation.MinTransformation(data['train_inputs'], data['train_outputs'])
 
-    return run_model.run_model(data['train_X'],
-                               data['train_Y'],
-                               data['test_X'],
-                               data['test_Y'],
+    return run_model.run_model(data['train_inputs'],
+                               data['train_outputs'],
+                               data['test_inputs'],
+                               data['test_outputs'],
                                cond_ll,
                                kernel,
                                method,
                                name,
                                data['id'],
                                sparsity_factor,
-                               data_transformation.MinTransformation,
+                               transform,
                                True,
                                False,
                                optimization_config={'mog': 25, 'hyp': 25, 'll': 25},
@@ -205,27 +212,28 @@ def creep_experiment(method, sparsity_factor, run_id):
     """
     name = 'creep'
     data = data_source.creep_data()[run_id - 1]
-    kernel = get_kernels(data['train_X'].shape[1], 1, True)
+    kernel = get_kernels(data['train_inputs'].shape[1], 1, True)
     cond_ll = likelihood.WarpLL(np.array([3.8715, 3.8898, 2.8759]),
                                 np.array([1.5925, -1.3360, -2.0289]),
                                 np.array([0.7940, -4.1855, -3.0289]),
                                 np.log(0.01))
 
-    scaler = data_transformation.preprocessing.StandardScaler().fit(data['train_X'])
-    data['train_X'] = scaler.transform(data['train_X'])
-    data['test_X'] = scaler.transform(data['test_X'])
+    scaler = data_transformation.preprocessing.StandardScaler().fit(data['train_inputs'])
+    data['train_inputs'] = scaler.transform(data['train_inputs'])
+    data['test_inputs'] = scaler.transform(data['test_inputs'])
+    transform = data_transformation.MinTransformation(data['train_inputs'], data['train_outputs'])
 
-    return run_model.run_model(data['train_X'],
-                               data['train_Y'],
-                               data['test_X'],
-                               data['test_Y'],
+    return run_model.run_model(data['train_inputs'],
+                               data['train_outputs'],
+                               data['test_inputs'],
+                               data['test_outputs'],
                                cond_ll,
                                kernel,
                                method,
                                name,
                                data['id'],
                                sparsity_factor,
-                               data_transformation.MinTransformation,
+                               transform,
                                True,
                                False,
                                optimization_config={'mog': 25, 'hyp': 25, 'll': 25},
@@ -248,24 +256,26 @@ def mnist_experiment(method, sparsity_factor, run_id,
     """
     name = 'mnist'
     data = data_source.mnist_data()[run_id - 1]
-    kernel = [ExtRBF(data['train_X'].shape[1], variance=11, lengthscale=np.array((9.,)), ARD=False)
+    kernel = [ExtRBF(data['train_inputs'].shape[1], variance=11, lengthscale=np.array((9.,)), ARD=False)
               for _ in range(10)]
     cond_ll = likelihood.SoftmaxLL(10)
+    transform = data_transformation.IdentityTransformation(data['train_inputs'],
+                                                           data['train_outputs'])
 
-    return run_model.run_model(data['train_X'],
-                               data['train_Y'],
-                               data['test_X'],
-                               data['test_Y'],
+    return run_model.run_model(data['train_inputs'],
+                               data['train_outputs'],
+                               data['test_inputs'],
+                               data['test_outputs'],
                                cond_ll,
                                kernel,
                                method,
                                name,
                                data['id'],
                                sparsity_factor,
-                               data_transformation.IdentityTransformation,
+                               transform,
                                False,
                                False,
-                               optimization_config={'mog': 8, 'hyp': 1},
+                               optimization_config={'mog': 12, 'hyp': 1, 'inducing': 1},
                                max_iter=300,
                                n_threads=n_threads,
                                ftol=10,
@@ -289,23 +299,25 @@ def mnist_binary_experiment(method, sparsity_factor, run_id,
     """
     name = 'mnist_binary'
     data = data_source.mnist_binary_data()[run_id - 1]
-    kernel = [ExtRBF(data['train_X'].shape[1], variance=11, lengthscale=np.array((9.,)), ARD=False)]
+    kernel = [ExtRBF(data['train_inputs'].shape[1], variance=11, lengthscale=np.array((9.,)), ARD=False)]
     cond_ll = likelihood.LogisticLL()
+    transform = data_transformation.IdentityTransformation(data['train_inputs'],
+                                                           data['train_outputs'])
 
-    return run_model.run_model(data['train_X'],
-                               data['train_Y'],
-                               data['test_X'],
-                               data['test_Y'],
+    return run_model.run_model(data['train_inputs'],
+                               data['train_outputs'],
+                               data['test_inputs'],
+                               data['test_outputs'],
                                cond_ll,
                                kernel,
                                method,
                                name,
                                data['id'],
                                sparsity_factor,
-                               data_transformation.IdentityTransformation,
+                               transform,
                                False,
                                False,
-                               optimization_config={'mog': 8, 'hyp': 1},
+                               optimization_config={'mog': 12, 'hyp': 1, 'inducing': 1},
                                max_iter=300,
                                n_threads=n_threads,
                                ftol=10,
@@ -329,20 +341,22 @@ def mnist_binary_inducing_experiment(method, sparsity_factor, run_id,
     """
     name = 'mnist_binary'
     data = data_source.mnist_binary_data()[run_id - 1]
-    kernel = [ExtRBF(data['train_X'].shape[1], variance=11, lengthscale=np.array((9.,)), ARD=False)]
+    kernel = [ExtRBF(data['train_inputs'].shape[1], variance=11, lengthscale=np.array((9.,)), ARD=False)]
     cond_ll = likelihood.LogisticLL()
+    transform = data_transformation.IdentityTransformation(data['train_inputs'],
+                                                           data['train_outputs'])
 
-    return run_model.run_model(data['train_X'],
-                               data['train_Y'],
-                               data['test_X'],
-                               data['test_Y'],
+    return run_model.run_model(data['train_inputs'],
+                               data['train_outputs'],
+                               data['test_inputs'],
+                               data['test_outputs'],
                                cond_ll,
                                kernel,
                                method,
                                name,
                                data['id'],
                                sparsity_factor,
-                               data_transformation.IdentityTransformation,
+                               transform,
                                False,
                                False,
                                optimization_config={'mog': 60, 'hyp': 15, 'inducing': 6},
@@ -369,23 +383,25 @@ def sarcos_experiment(method, sparsity_factor, run_id,
     """
     name = 'sarcos'
     data = data_source.sarcos_data()[run_id - 1]
-    kernel = get_kernels(data['train_X'].shape[1], 3, False)
+    kernel = get_kernels(data['train_inputs'].shape[1], 3, False)
     cond_ll = likelihood.CogLL(0.1, 2, 1)
+    transform = data_transformation.MeanStdYTransformation(data['train_inputs'],
+                                                           data['train_outputs'])
 
-    return run_model.run_model(data['train_X'],
-                               data['train_Y'],
-                               data['test_X'],
-                               data['test_Y'],
+    return run_model.run_model(data['train_inputs'],
+                               data['train_outputs'],
+                               data['test_inputs'],
+                               data['test_outputs'],
                                cond_ll,
                                kernel,
                                method,
                                name,
                                data['id'],
                                sparsity_factor,
-                               data_transformation.MeanStdYTransformation,
+                               transform,
                                True,
                                False,
-                               optimization_config={'mog': 50, 'hyp': 10, 'll': 10},
+                               optimization_config={'mog': 10, 'hyp': 2, 'll': 2, 'inducing': 1},
                                max_iter=200,
                                partition_size=partition_size,
                                n_threads=n_threads,
@@ -408,20 +424,22 @@ def sarcos_inducing_experiment(method, sparsity_factor, run_id,
     """
     name = 'sarcos'
     data = data_source.sarcos_data()[run_id - 1]
-    kernel = get_kernels(data['train_X'].shape[1], 3, False)
+    kernel = get_kernels(data['train_inputs'].shape[1], 3, False)
     cond_ll = likelihood.CogLL(0.1, 2, 1)
+    transform = data_transformation.MeanStdYTransformation(data['train_inputs'],
+                                                           data['train_outputs'])
 
-    return run_model.run_model(data['train_X'],
-                               data['train_Y'],
-                               data['test_X'],
-                               data['test_Y'],
+    return run_model.run_model(data['train_inputs'],
+                               data['train_outputs'],
+                               data['test_inputs'],
+                               data['test_outputs'],
                                cond_ll,
                                kernel,
                                method,
                                name,
                                data['id'],
                                sparsity_factor,
-                               data_transformation.MeanStdYTransformation,
+                               transform,
                                True,
                                False,
                                optimization_config={'mog': 50, 'hyp': 10, 'll': 10, 'inducing': 6},
@@ -447,27 +465,60 @@ def sarcos_all_joints_experiment(method, sparsity_factor, run_id,
     """
     name = 'sarcos_all_joints'
     data = data_source.sarcos_all_joints_data()[run_id]
-    kernel = get_kernels(data['train_X'].shape[1], 8, False)
+    kernel = get_kernels(data['train_inputs'].shape[1], 8, False)
     cond_ll = likelihood.CogLL(0.1, 7, 1)
 
-    scaler = data_transformation.preprocessing.StandardScaler().fit(data['train_X'])
-    data['train_X'] = scaler.transform(data['train_X'])
-    data['test_X'] = scaler.transform(data['test_X'])
+    scaler = data_transformation.preprocessing.StandardScaler().fit(data['train_inputs'])
+    data['train_inputs'] = scaler.transform(data['train_inputs'])
+    data['test_inputs'] = scaler.transform(data['test_inputs'])
+    transform = data_transformation.MeanStdYTransformation(data['train_inputs'],
+                                                           data['train_outputs'])
 
-    return run_model.run_model(data['train_X'],
-                               data['train_Y'],
-                               data['test_X'],
-                               data['test_Y'],
+    return run_model.run_model(data['train_inputs'],
+                               data['train_outputs'],
+                               data['test_inputs'],
+                               data['test_outputs'],
                                cond_ll,
                                kernel,
                                method,
                                name,
                                data['id'],
                                sparsity_factor,
-                               data_transformation.MeanStdYTransformation,
+                               transform,
                                True,
                                False,
                                optimization_config={'mog': 50, 'hyp': 10, 'll': 10},
+                               max_iter=200,
+                               partition_size=partition_size,
+                               ftol=10,
+                               n_threads=n_threads,
+                               model_image_dir=image)
+
+
+def airline_experiment(method, sparsity_factor, run_id,
+                       image=None, n_threads=1, partition_size=3000):
+    name = 'airline'
+    data = data_source.airline_data()[run_id - 1]
+    print data['train_inputs'].shape, data['train_outputs'].shape, data['test_inputs'].shape, data['test_outputs'].shape
+    kernel = get_kernels(data['train_inputs'].shape[1], 1, True)
+    cond_ll = likelihood.UnivariateGaussian(np.array(1.0))
+
+    transform = data_transformation.MeanStdTransformation(data['train_inputs'],
+                                                          data['train_outputs'])
+    return run_model.run_model(data['train_inputs'],
+                               data['train_outputs'],
+                               data['test_inputs'],
+                               data['test_outputs'],
+                               cond_ll,
+                               kernel,
+                               method,
+                               name,
+                               data['id'],
+                               sparsity_factor,
+                               transform,
+                               False,
+                               False,
+                               optimization_config={'mog': 5, 'hyp': 1, 'll': 1},
                                max_iter=200,
                                partition_size=partition_size,
                                ftol=10,

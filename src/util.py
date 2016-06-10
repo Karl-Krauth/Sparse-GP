@@ -13,10 +13,10 @@ import numpy as np
 class PosDefMatrix(object):
     def __init__(self, num_latent, num_inducing):
         self.is_outdated = True
-        self.matrix = np.empty([num_latent, num_inducing, num_inducing])
-        self.inverse = np.empty([num_latent, num_inducing, num_inducing])
-        self.cholesky = np.empty([num_latent, num_inducing, num_inducing])
-        self.log_determinant = np.empty([num_latent])
+        self.matrix = np.empty([num_latent, num_inducing, num_inducing], dtype=np.float32)
+        self.inverse = np.empty([num_latent, num_inducing, num_inducing], dtype=np.float32)
+        self.cholesky = np.empty([num_latent, num_inducing, num_inducing], dtype=np.float32)
+        self.log_determinant = np.empty([num_latent], dtype=np.float32)
 
     def update(self, kernels, inducing_locations):
         if not self.is_outdated:
