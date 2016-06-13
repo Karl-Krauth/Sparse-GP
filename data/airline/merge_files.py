@@ -6,7 +6,7 @@ flights = pd.read_csv('2008.csv')
 flights = flights[(flights['Month'] >= 1) & (flights['Month'] <= 4)]
 
 # Read in plane data and drop invalid values/change headers.
-planes = pd.read_csv('plane-data.csv')[['tailnum', 'year']].replace('None', np.nan).dropna()
+planes = pd.read_csv('plane-data.csv')[['tailnum', 'year']].replace('None', np.nan).replace('0000', np.nan).dropna()
 planes.columns = ['TailNum', 'plane_year']
 
 # Merge the two files and output the result.
