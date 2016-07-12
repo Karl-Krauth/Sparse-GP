@@ -123,11 +123,11 @@ class PlotOutput:
                     g= DataFrame(dict([(k,Series(v)) for k,v in g.iteritems()]))
                     ax = g.plot(kind='box', title=n)
                     check_dir_exists('../graph_data/')
-                    g.to_csv('../graph_data/' + name  + '_' + n + '_data.csv')
+                    g.to_csv('../graph_data/' + name  + '_' + n + '_data.csv', index=False)
                 if n in ['ER', 'MSSE']:
                     g= DataFrame(dict([(k,Series(v)) for k,v in g.iteritems()]))
                     check_dir_exists('../graph_data/')
-                    g.to_csv('../graph_data/' + name  + '_' + n + '_data.csv')
+                    g.to_csv('../graph_data/' + name  + '_' + n + '_data.csv', index=False)
                     m = g.mean()
                     errors = g.std()
                     ax =m.plot(kind='bar', yerr=errors, title=n)
@@ -136,7 +136,7 @@ class PlotOutput:
                 if n in ['intensity']:
                     X = g.values()[0][:, 0]
                     true_data = DataFrame({'x': X, 'y': g.values()[0][:, 3]})
-                    true_data.to_csv('../graph_data/' + name  + '_' + 'true_y' + '_data.csv')
+                    true_data.to_csv('../graph_data/' + name  + '_' + 'true_y' + '_data.csv', index=False)
                     plt.figure()
                     color = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
                     c = 0
@@ -149,7 +149,7 @@ class PlotOutput:
                                                                  ))
                         c += 1
                     plt.legend(loc='upper center')
-                    graph_data.to_csv('../graph_data/' + name  + '_' + n + '_data.csv')
+                    graph_data.to_csv('../graph_data/' + name  + '_' + n + '_data.csv', index=False)
 
                 show(block=True)
 

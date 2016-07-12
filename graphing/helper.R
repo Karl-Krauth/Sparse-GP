@@ -6,7 +6,6 @@ rename_model <- function(data){
 }
 
 draw_bar_models <- function(data, y_lab, leg_pos){
-  data$X = NULL
   data = melt(data)
   data$model = toupper(substr(data$variable,0, 4))
   data = rename_model(data)
@@ -41,7 +40,6 @@ draw_bar_models <- function(data, y_lab, leg_pos){
 }  
 
 draw_bar_models_with_X <- function(data, y_lab, leg_pos){
-  data$X = NULL
   data = melt(data)
   data$model = toupper(substr(data$variable,0, 4))
   data = rename_model(data)
@@ -76,7 +74,6 @@ draw_bar_models_with_X <- function(data, y_lab, leg_pos){
 
 
 draw_boxplot_models_with_X <- function(data, y_lab, leg_pos){
-  data$X = NULL
   data = melt(data)
   data$model = toupper(substr(data$variable,0, 4))
   data$sp = substr(data$variable,6, 15)
@@ -140,7 +137,6 @@ draw_intensity <- function(data, y_lab){
 }
 
 draw_mining_data <- function(data){
-  data$X = NULL
   p = ggplot(data, aes(x=x, y = y)) + 
     stat_summary(fun.y = "mean", geom = "line", position = position_dodge()) + 
     
@@ -165,7 +161,6 @@ draw_mining_data <- function(data){
 }
 
 draw_joints <- function(data){
-  data$X = NULL
   data = melt(data)
   data$joint = factor(as.numeric(substr(data$variable,11, 14)) + 1)
   data$name = paste(SP_name, "=", "0.04")
