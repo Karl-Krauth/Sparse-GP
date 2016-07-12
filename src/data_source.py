@@ -4,7 +4,6 @@ code (see data/matlab_code_data), in order to ensure they are the same training 
 that were used in the previous paper (Nguyen and Bonilla NIPS (2014)).
 The Matlab code to generate data is ``load_data.m``.
 """
-
 import cPickle
 import gzip
 import os
@@ -14,6 +13,7 @@ import numpy as np
 import pandas
 
 from kernel import ExtRBF
+
 
 def normal_generate_samples(n_samples, var, input_dim=3):
     num_samples = n_samples
@@ -30,6 +30,7 @@ def normal_generate_samples(n_samples, var, input_dim=3):
     for j in range(var.shape[0]):
         y[:, j] = np.reshape(np.random.multivariate_normal(np.zeros(num_samples), K), (num_samples))
     return X, y, rbf
+
 
 def wisconsin_breast_cancer_data():
     """
@@ -64,6 +65,7 @@ def wisconsin_breast_cancer_data():
 
     return data
 
+
 def usps_data():
     """
     Loads and returns data of USPS dataset. Note that ``X`` is standardized. Only digits 4, 7,
@@ -94,6 +96,7 @@ def usps_data():
 
     return data
 
+
 def mining_data():
     """
     Loads and returns data of Coal-mining disasters dataset. See 'get_mine_data.m' to see how data
@@ -121,6 +124,7 @@ def mining_data():
     })
 
     return data
+
 
 def boston_data():
     """
@@ -150,6 +154,7 @@ def boston_data():
         })
 
     return data
+
 
 def abalone_data():
     """
@@ -181,6 +186,7 @@ def abalone_data():
 
     return data
 
+
 def creep_data():
     """
     Loads and returns data of Creep dataset.
@@ -209,6 +215,7 @@ def creep_data():
         })
 
     return data
+
 
 def mnist_data():
     """
@@ -266,6 +273,7 @@ def mnist_data():
 
     return data
 
+
 def mnist_binary_data():
     """
     Loads and returns data of MNIST dataset for all digits.
@@ -289,6 +297,7 @@ def mnist_binary_data():
         to_bin, 1, data[0]['test_outputs']).astype(int)[:, np.newaxis]
 
     return data
+
 
 def sarcos_data():
     """
@@ -319,6 +328,7 @@ def sarcos_data():
 
     return data
 
+
 def sarcos_all_joints_data():
     """
     Loads and returns data of SARCOS dataset for all joints.
@@ -348,13 +358,14 @@ def sarcos_all_joints_data():
 
     return data
 
+
 def airline_data():
     train = pandas.read_csv('data/airline/train.csv', header=None)
     test = pandas.read_csv('data/airline/test.csv', header=None)
     return [{
-        'train_outputs': train.ix[:, 8:].values,
-        'train_inputs': train.ix[:, :7].values,
-        'test_outputs': test.ix[:, 8:].values,
-        'test_inputs': test.ix[:, :7].values,
+        'train_outputs': train.values[:, 8:],
+        'train_inputs': train.values[:, :8],
+        'test_outputs': test.values[:, 8:],
+        'test_inputs': test.values[:, :8],
         'id': 0
     }]

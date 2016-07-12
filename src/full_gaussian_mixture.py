@@ -1,6 +1,7 @@
 """This module implements the FullGaussianMixture class."""
 from GPy.util.linalg import mdot
 import numpy as np
+import scipy
 
 import gaussian_mixture
 import theano
@@ -89,20 +90,14 @@ class FullGaussianMixture(gaussian_mixture.GaussianMixture):
         assert component_index == 0
         return util.tr_AB(A, self.covars[latent_index])
 
-    def grad_trace_a_dot_covars(self, A, component_index, latent_index):
+    def grad_trace_a_inv_dot_covars(self, chol_a, component_index, latent_index):
         assert component_index == 0
         # TODO(karl): There is a bug here related to double counting.
-        tmp = self._theano_grad_trace_a_dot_covars(A, self.covars_cholesky[latent_index])
+        tmp = 2.0 * scipy.linalg.cho_solve((chol_a, True),
+                                           self.covars_cholesky[latent_index])
         tmp[np.diag_indices_from(tmp)] *= (
             self.covars_cholesky[latent_index][np.diag_indices_from(tmp)])
         return tmp[np.tril_indices_from(self.covars_cholesky[latent_index])]
-
-    def _compile_grad_trace_a_dot_covars():
-        A = tensor.matrix('A')
-        covars_cholesky = tensor.matrix('covars_cholesky')
-        result = 2.0 * tensor.dot(A, covars_cholesky)
-        return theano.function([A, covars_cholesky], result)
-    _theano_grad_trace_a_dot_covars = _compile_grad_trace_a_dot_covars()
 
     def transform_covars_grad(self, internal_grad):
         grad = np.empty((self.num_latent, self.get_covar_size()), dtype=np.float32)

@@ -206,7 +206,7 @@ class GaussianMixture(object):
         # TODO(karl): comment
         raise NotImplementedError
 
-    def grad_trace_a_dot_covars(self, A, k, j):
+    def grad_trace_a_inv_dot_covars(self, chol_a, k, j):
         # TODO(karl): comment
         raise NotImplementedError
 

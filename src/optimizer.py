@@ -1,7 +1,6 @@
 """This module contain utilities for optimizing the parameters of a gaussian process model."""
 
 import math
-import threading
 import time
 
 import numpy as np
@@ -155,18 +154,6 @@ class BatchModelWrapper(object):
         return self._total_function_evals
 
 
-model_lock = threading.Lock()
-def save_model():
-    i = 0
-    global glob_mod
-    while True:
-        model_lock.acquire()
-        model_logging.snapshot_model(glob_mod, str(i) + ".dump")
-        model_lock.release()
-        i += 1
-        time.sleep(60 * 15)
-
-glob_mod = None
 def stochastic_optimize_model(model, optimization_config, max_iterations=200, mog_threshold=1e-4,
                               objective_threshold=1e-5, num_batches=1):
     """
@@ -195,12 +182,6 @@ def stochastic_optimize_model(model, optimization_config, max_iterations=200, mo
         defined by the model.
     """
     start = time.time()
-    global glob_mod
-    glob_mod = model
-    thread = threading.Thread(target=save_model)
-    thread.daemon = True
-    thread.start()
-
     current_iter = 1
     total_evaluations = 0
     checker = ConvergenceChecker(mog_threshold, objective_threshold)
@@ -229,10 +210,10 @@ def stochastic_optimize_model(model, optimization_config, max_iterations=200, mo
         model_logging.logger.info('Interrupted by the user.')
         model_logging.logger.info('Last objective value: %f', model.overall_objective_function())
 
-    thread.stop()
     end = time.time()
 
     return (end - start), total_evaluations
+
 
 grad_rms = [0] * 10
 change_rms = [0] * 10
@@ -253,18 +234,19 @@ def sgd(model, num_batches, max_passes, idx):
     curr_train_index = 0
     global grad_rms
     global change_rms
+    global iternum
     eps = 1e-6
-    decay_rate = 0.950
+    decay_rate = 0.95
 
     model.set_train_partitions(curr_train_index, num_batches)
     model.set_params(model.get_params())
 
-    for j in xrange(max_passes):
+    for i in xrange(max_passes):
+        model.shuffle_data()
         for j in xrange(model.get_num_partitions() / num_batches):
-            model_lock.acquire()
             old_params = model.get_params()
             grad_rms[idx] = (decay_rate * grad_rms[idx] + (1 - decay_rate) *
-                        model.objective_function_gradients() ** 2)
+                             model.objective_function_gradients() ** 2)
             change = -(np.sqrt(change_rms[idx] + eps) / np.sqrt(grad_rms[idx] + eps) *
                        model.objective_function_gradients())
             change_rms[idx] = decay_rate * change_rms[idx] + (1 - decay_rate) * change ** 2
@@ -275,7 +257,6 @@ def sgd(model, num_batches, max_passes, idx):
                 curr_train_index = 0
             model.set_train_partitions(curr_train_index, num_batches)
             model.set_params(new_params)
-            model_lock.release()
 
             model_logging.logger.debug('Objective: %.4f', model.objective_function())
             num_evals += 1

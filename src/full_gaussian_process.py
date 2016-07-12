@@ -46,8 +46,8 @@ class FullGaussianProcess(gaussian_process.GaussianProcess):
             grad = np.empty([self.num_components, self.num_latent,
                              self.gaussian_mixture.get_covar_size()], dtype=np.float32)
             for j in xrange(self.num_latent):
-                grad_trace = self.gaussian_mixture.grad_trace_a_dot_covars(
-                    self.kernel_matrix.inverse[j], 0, j)
+                grad_trace = self.gaussian_mixture.grad_trace_a_inv_dot_covars(
+                    self.kernel_matrix.cholesky[j], 0, j)
                 grad[0, j] = (-0.5 * grad_trace)
 
             return grad.flatten()

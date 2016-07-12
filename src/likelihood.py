@@ -221,7 +221,7 @@ class UnivariateGaussian(Likelihood):
         var = sigma + self.sigma
         lpd = None
         if Ys is not None:
-            lpd = -(np.square(0.5 * (Ys - mu)) / var + np.log(2. * math.pi * var))[:, 0]
+            lpd = -(0.5 * np.square(Ys - mu) / var + 0.5 * np.log(2. * math.pi * var))[:, 0]
         return mu, var, lpd[:, np.newaxis] if lpd is not None else None
 
     def ell(self, mu, sigma, Y):

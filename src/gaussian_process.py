@@ -145,7 +145,8 @@ class GaussianProcess(object):
         self.inducing_locations, initial_mean = (
             self._initialize_inducing_points(train_inputs, train_outputs, inducing_on_inputs))
         self.gaussian_mixture = self._get_gaussian_mixture(initial_mean)
-        self.hyper_params = np.empty([self.num_latent, self.num_hyper_params], dtype=np.float32)
+        self.hyper_params = np.array([self.kernels[i].param_array.copy()
+                                      for i in xrange(self.num_latent)], dtype=np.float32)
 
         # Initialize the interim variables used to calculate parameters.
         self.cached_ell = None
@@ -597,7 +598,6 @@ class GaussianProcess(object):
 
         data_inducing_kernel, kernel_products, diag_conditional_covars = (
             self._get_interim_matrices(input_partition))
-
         for i in xrange(self.num_components):
             # Pre-compute values relevant to calculating the gradients and ell.
             partition_size = input_partition.shape[0]
@@ -605,17 +605,14 @@ class GaussianProcess(object):
                 self._get_samples(i, partition_size, kernel_products, diag_conditional_covars))
             conditional_ll, _ = self.likelihood.ll_F_Y(samples, output_partition)
             conditional_ll = conditional_ll.astype(np.float32)
-
             # Now compute gradients and ell for this component.
             ell += self._calculate_ell(
                 i, output_partition, conditional_ll, sample_means, sample_vars)
-
             # Increment the gradient if the data is not sparse.
             if self.num_data_points != self.num_inducing:
                 hyper_params_grad += self._grad_ell_over_hyper_params(
                     i, input_partition, conditional_ll, data_inducing_kernel, kernel_products,
                     sample_vars, normal_samples)
-
         return ell, hyper_params_grad
 
     def _likelihood_params_ell(self, input_partition, output_partition):
@@ -731,7 +728,7 @@ class GaussianProcess(object):
         for i in xrange(self.num_components):
             for j in xrange(self.num_latent):
                 grad[i, j] = -(self.gaussian_mixture.weights[i] *
-                               mdot(self.kernel_matrix.inverse[j],
+                               scipy.linalg.cho_solve((self.kernel_matrix.cholesky[j], True),
                                self.gaussian_mixture.means[i, j]))
 
         return grad
@@ -751,8 +748,8 @@ class GaussianProcess(object):
             dtype=np.float32)
         for i in xrange(self.num_components):
             for j in xrange(self.num_latent):
-                grad_trace = self.gaussian_mixture.grad_trace_a_dot_covars(
-                    self.kernel_matrix.inverse[j], i, j)
+                grad_trace = self.gaussian_mixture.grad_trace_a_inv_dot_covars(
+                    self.kernel_matrix.cholesky[j], i, j)
                 grad[i, j] = (-0.5 * self.gaussian_mixture.weights[i] * grad_trace)
 
         return grad.flatten()
@@ -771,10 +768,12 @@ class GaussianProcess(object):
         for i in xrange(self.num_components):
             for j in xrange(self.num_latent):
                 mean = self.gaussian_mixture.means[i, j]
+                mean_dot_kern_inv_dot_mean = mdot(mean.T, scipy.linalg.cho_solve(
+                    (self.kernel_matrix.cholesky[j], True), mean))
                 grad[i] += (
                     self.num_inducing * np.log(2 * np.pi) + self.kernel_matrix.log_determinant[j] +
-                    mdot(mean.T, self.kernel_matrix.inverse[j], mean) +
-                    self.gaussian_mixture.trace_with_covar(self.kernel_matrix.inverse[j], i, j))
+                    mean_dot_kern_inv_dot_mean + self.gaussian_mixture.trace_with_covar(
+                    self.kernel_matrix.inverse[j], i, j))
 
         grad *= -0.5
         return grad
@@ -828,11 +827,11 @@ class GaussianProcess(object):
         """
         grad = np.zeros([self.num_inducing, self.num_inducing], dtype=np.float32)
         for i in xrange(self.num_components):
-            kernel_inverse = self.kernel_matrix.inverse[latent_index]
             grad += (
-                -0.5 * self.gaussian_mixture.weights[i] * (kernel_inverse -
-                mdot(kernel_inverse, self.gaussian_mixture.mean_prod_sum_covar(i, latent_index),
-                kernel_inverse)))
+                -0.5 * self.gaussian_mixture.weights[i] * (self.kernel_matrix.inverse[latent_index] -
+                scipy.linalg.cho_solve((self.kernel_matrix.cholesky[latent_index], True),
+                scipy.linalg.cho_solve((self.kernel_matrix.cholesky[latent_index], True),
+                self.gaussian_mixture.mean_prod_sum_covar(i, latent_index).T).T)))
 
         return grad
 
@@ -951,11 +950,12 @@ class GaussianProcess(object):
         """
         grad = np.empty([self.num_latent, self.num_inducing], dtype=np.float32)
         for i in xrange(self.num_latent):
-            mean = util.weighted_average(conditional_ll, normal_samples[i] / np.sqrt(sample_vars[i]),
-                                         self.num_samples)
+            mean = util.weighted_average(conditional_ll, normal_samples[i] /
+                                         np.sqrt(sample_vars[i]), self.num_samples)
             # TODO(karl): Figure out why we need a double mdot here.
             grad[i] = (self.gaussian_mixture.weights[component_index] *
-                       mdot(self.kernel_matrix.inverse[i], mdot(mean, data_inducing_kernel[i].T)))
+                       scipy.linalg.cho_solve((self.kernel_matrix.cholesky[i], True),
+                       mdot(mean, data_inducing_kernel[i].T)))
         return grad
 
     def _grad_ell_over_covars(self, component_index, conditional_ll, kernel_products, sample_vars,
@@ -1268,7 +1268,7 @@ class GaussianProcess(object):
             The value of the gradient. Dimensions: num_latent * num_inducing * input_dim.
         """
         # TODO(karl): Consider removing m.
-        w = mdot(self.kernel_matrix.inverse[latent_index], m)
+        w = scipy.linalg.cho_solve((self.kernel_matrix.cholesky[latent_index], True), m)
         return (self.kernels[latent_index].get_gradients_AK(w.T, input_partition,
                 self.inducing_locations[latent_index]) -
                 self.kernels[latent_index].get_gradients_SKD(kernel_products[latent_index], w,
@@ -1295,8 +1295,9 @@ class GaussianProcess(object):
             The value of the gradient. Dimensions: num_latent * num_inducing * input_dim.
         """
         # TODO(karl): Consider removing m. Optimize memory. Rename vars.
-        w = mdot(self.kernel_matrix.inverse[latent_index], m)
-        temp1 = self.kernels[latent_index].get_gradients_X_AK(w, self.inducing_locations[latent_index], input_partition)
+        w = scipy.linalg.cho_solve((self.kernel_matrix.cholesky[latent_index], True), m)
+        temp1 = self.kernels[latent_index].get_gradients_X_AK(
+            w, self.inducing_locations[latent_index], input_partition)
         temp2 = self.kernels[latent_index].get_gradients_X_SKD(
             kernel_products[latent_index], w, self.inducing_locations[latent_index])
         return temp1 - temp2
@@ -1460,3 +1461,4 @@ class GaussianProcess(object):
     def __setstate__(self, dict):
         self.__dict__ = dict
         self.kernel_matrix = util.PosDefMatrix(self.num_latent, self.num_inducing)
+        self.kernel_matrix.update(self.kernels, self.inducing_locations)

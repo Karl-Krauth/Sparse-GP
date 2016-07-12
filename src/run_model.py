@@ -4,6 +4,8 @@ Provides facility for fitting models to data, making predictions and exporting r
 import cPickle
 import os
 
+import numpy as np
+
 import model_logging
 import optimizer
 from diagonal_gaussian_process import DiagonalGaussianProcess
