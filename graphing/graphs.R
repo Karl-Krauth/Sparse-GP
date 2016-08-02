@@ -83,7 +83,7 @@ ggsave(file=paste(output_path, "usps_NLPD", ".pdf", sep = ""),  width=w, height=
 
 #mnist data
 data = read.csv('../../graph_data/mnist_binary_ER_data.csv')
-p1 = draw_bar_models(data, "error rate", "None")
+p1 = draw_bar_models_with_X(data, "error rate", "None")
 ggsave(file=paste(output_path, 'mnist_binary_ER', ".pdf", sep = ""),  width=w/2, height=h, units = "cm" , device=cairo_pdf, p1)
 
 data = read.csv('../../graph_data/mnist_binary_NLPD_data.csv')

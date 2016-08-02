@@ -13,52 +13,19 @@ rename_model <- function(data){
   data
 }
 
-draw_bar_models <- function(data, y_lab, leg_pos){
-  data = melt(data)
-  data$model = toupper(substr(data$variable,0, 4))
-  data = rename_model(data)
-  data$sp = substr(data$variable,6, 15)
-
-  ggplot(data, aes(x=sp, y = value, fill = sp)) +
-    stat_summary(fun.y = "mean", geom = "bar", position = position_dodge() ) +
-    stat_summary(fun.data = mean_cl_normal, geom="linerange", colour="black", position=position_dodge(.9)) +
-    theme_bw() +
-    scale_fill_brewer(name=SP_name, palette="Set1") +
-    ylim(0, 0.08) +
-    xlab(SP_name) +
-    ylab(y_lab) +
-    theme(legend.direction = "vertical", legend.position = leg_pos, legend.box = "vertical",
-          axis.line.x = element_line(colour = "black"),
-          axis.line.y = element_line(colour = "black"),
-          panel.grid.major=element_blank(),
-          panel.grid.minor=element_blank(),
-          panel.border = element_blank(),
-          panel.margin = unit(.4, "lines"),
-          text=element_text(family="Arial", size=10),
-          legend.key = element_blank(),
-          strip.background = element_rect(colour = "white", fill = "white",
-                                          size = 0.5, linetype = "solid")
-
-
-    ) +
-    facet_grid(~model)+
-
-    guides(fill = guide_legend(keywidth = 0.5, keyheight = 0.5))
-}
-
 draw_bar_models_with_X <- function(data, y_lab, leg_pos){
   data = melt(data)
   data$model = toupper(substr(data$variable,0, 4))
   data = rename_model(data)
   data$sp = substr(data$variable,6, 15)
-  data$sp = factor(data$sp, levels=c("0.1", "0.2", "0.5", "1.0", ""))
+  data$sp = factor(data$sp, levels=c("0.001", "0.004", "0.02", "0.04", "0.1", "0.2", "0.5", "1.0", ""))
   data$model2 = factor(data$model, levels=c("FG", "MoG1", "MoG2", "GP", "WGP", "EP", "VBO", "VQ"))
 
   ggplot(data, aes(x=sp, y = value, fill = sp)) +
     stat_summary(fun.y = "mean", geom = "bar", position = position_dodge() ) +
     stat_summary(fun.data = mean_cl_normal, geom="linerange", colour="black", position=position_dodge(.9)) +
     theme_bw() +
-    scale_fill_brewer(name=SP_name, palette="Set1") +
+    scale_fill_brewer(name=SP_name, palette="OrRd") +
     xlab(SP_name) +
     ylab(y_lab) +
     theme(legend.direction = "vertical", legend.position = leg_pos, legend.box = "vertical",
