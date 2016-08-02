@@ -22,6 +22,7 @@ EXPERIMENTS = {
     'mnist_binary_inducing': setup_experiment.mnist_binary_inducing_experiment,
     'sarcos': setup_experiment.sarcos_experiment,
     'sarcos_inducing': setup_experiment.sarcos_inducing_experiment,
+    'sarcos_all_joints': setup_experiment.sarcos_all_joints_experiment,
 }
 
 METHODS = ['mix1', 'mix2', 'full']

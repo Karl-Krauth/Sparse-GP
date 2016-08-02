@@ -507,8 +507,16 @@ class CogLL(Likelihood):
         W = F[:, :, :self.P * self.Q].reshape(F.shape[0], F.shape[1], self.P, self.Q)
         f = F[:, :, self.P * self.Q:]
         Wf = np.einsum('ijlk,ijk->ijl', W, f)
-        c = 1.0 / 2 * (mdot((Y - Wf), self.sigma_inv) * (Y - Wf)).sum(axis=2)
-        return (self.const + -c), (self.const_grad * self.sigma_y + c)
+        c = self._theano_ll_F_Y(Y, Wf, self.sigma_inv)
+        return (self.const  -c), (self.const_grad * self.sigma_y + c)
+
+    def _compile_ll_F_Y():
+        Y = tensor.matrix('Y')
+        Wf = tensor.tensor3('Wf')
+        sigma_inv = tensor.matrix('sigma_inv')
+        c = 1.0 / 2 * (theano.dot((Y - Wf), sigma_inv) * (Y - Wf)).sum(axis=2)
+        return theano.function([Y, Wf, sigma_inv], c)
+    _theano_ll_F_Y = _compile_ll_F_Y()
 
     def get_params(self):
         return np.array([np.log(self.sigma_y)])
@@ -528,7 +536,7 @@ class CogLL(Likelihood):
     def set_params(self, p):
         self.sigma_y = math.exp(p[0])
         self.sigma = self.sigma_y * np.eye(self.P)
-        self.sigma_inv = inv(self.sigma)
+        self.sigma_inv = inv(self.sigma).astype(np.float32)
         self.const = -1.0 / 2 * np.log(det(self.sigma)) - float(len(self.sigma)) / 2 * np.log(2 * math.pi)
         self.const_grad = -float(self.P) / 2. / self.sigma_y
 

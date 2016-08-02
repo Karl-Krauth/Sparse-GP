@@ -157,7 +157,7 @@ class GaussianProcess(object):
 
         # Update the model.
         self._update_latent_kernel()
-        # self._update_log_likelihood()
+        self._update_log_likelihood()
 
     def set_optimization_method(self, optimization_method):
         """
@@ -292,29 +292,7 @@ class GaussianProcess(object):
         float
             The current negative log likelihood value.
         """
-        ell = np.float32(0.0)
-        input_partition = self.input_partitions[0]
-        output_partition = self.output_partitions[0]
-
-        data_inducing_kernel, kernel_products, diag_conditional_covars = (
-            self._get_interim_matrices(input_partition))
-
-        for i in xrange(self.num_components):
-            # Pre-compute values relevant to calculating the ell.
-            partition_size = input_partition.shape[0]
-            normal_samples, sample_means, sample_vars, samples = (
-                self._get_samples(i, partition_size, kernel_products, diag_conditional_covars))
-            conditional_ll, _ = self.likelihood.ll_F_Y(samples, output_partition)
-            conditional_ll = conditional_ll.astype(np.float32)
-
-            # Now compute ell for this component.
-            ell += self._calculate_ell(i, output_partition, conditional_ll,
-                                       sample_means, sample_vars)
-
-        cross = self._calculate_cross(self._grad_cross_over_weights())
-        num_batches = len(self.input_partitions) / self.train_len
-        return -((self._calculate_entropy() + cross) / num_batches + ell)
-        # return -(self.cached_entropy + self.cached_cross + self.cached_ell)
+        return -(self.cached_entropy + self.cached_cross + self.cached_ell)
 
     def objective_function_gradients(self):
         """Gets the current negative log likelihood gradients."""

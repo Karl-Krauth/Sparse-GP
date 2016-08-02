@@ -45,7 +45,7 @@ def batch_optimize_model(model, optimization_config, max_iterations=200, mog_thr
 
     try:
         while (not checker.is_converged() and
-                (max_iterations is None or current_iter < max_iterations)):
+                (max_iterations is None or current_iter <= max_iterations)):
             model_logging.logger.info('Iteration %d started.', current_iter)
 
             # Go through and optimize each set of parameters in optimization_config.
@@ -137,11 +137,11 @@ class BatchModelWrapper(object):
     def objective_function(self, new_params):
         self.update(new_params)
         model_logging.logger.debug('Objective: %.4f', self._model.objective_function())
-        return self._model.objective_function()
+        return self._model.objective_function().astype(np.float64)
 
     def objective_function_gradients(self, new_params):
         self.update(new_params)
-        return self._model.objective_function_gradients()
+        return self._model.objective_function_gradients().astype(np.float64)
 
     def reset(self):
         self.update(self._initial_params)
