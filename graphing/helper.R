@@ -2,6 +2,7 @@ rename_model <- function(data){
   data$model[data$model == 'MIX1'] = "MoG1"
   data$model[data$model == 'MIX2'] = "MoG2"
   data$model[data$model == 'FULL'] = "FG"
+  data$model[data$model == 'BASE'] = "GP"
   data$model[data$model == 'GAUS'] = "GP"
   data$model[data$model == 'WARP'] = "WGP"
   data$model[data$model == 'EXPP'] = "EP"
@@ -17,27 +18,27 @@ draw_bar_models <- function(data, y_lab, leg_pos){
   data$model = toupper(substr(data$variable,0, 4))
   data = rename_model(data)
   data$sp = substr(data$variable,6, 15)
-  
-  ggplot(data, aes(x=sp, y = value, fill = sp)) + 
-    stat_summary(fun.y = "mean", geom = "bar", position = position_dodge() ) + 
+
+  ggplot(data, aes(x=sp, y = value, fill = sp)) +
+    stat_summary(fun.y = "mean", geom = "bar", position = position_dodge() ) +
     stat_summary(fun.data = mean_cl_normal, geom="linerange", colour="black", position=position_dodge(.9)) +
-    theme_bw() + 
-    scale_fill_brewer(name=SP_name, palette="Set1") + 
-    ylim(0, 0.08) +    
+    theme_bw() +
+    scale_fill_brewer(name=SP_name, palette="Set1") +
+    ylim(0, 0.08) +
     xlab(SP_name) +
     ylab(y_lab) +
-    theme(legend.direction = "vertical", legend.position = leg_pos, legend.box = "vertical", 
+    theme(legend.direction = "vertical", legend.position = leg_pos, legend.box = "vertical",
           axis.line.x = element_line(colour = "black"),
           axis.line.y = element_line(colour = "black"),
-          panel.grid.major=element_blank(), 
-          panel.grid.minor=element_blank(),      
+          panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank(),
           panel.border = element_blank(),
           panel.margin = unit(.4, "lines"),
           text=element_text(family="Arial", size=10),
           legend.key = element_blank(),
           strip.background = element_rect(colour = "white", fill = "white",
                                           size = 0.5, linetype = "solid")
-          
+
 
     ) +
     facet_grid(~model)+
@@ -57,28 +58,28 @@ draw_bar_models_with_X <- function(data, y_lab, leg_pos){
     stat_summary(fun.y = "mean", geom = "bar", position = position_dodge() ) +
     stat_summary(fun.data = mean_cl_normal, geom="linerange", colour="black", position=position_dodge(.9)) +
     theme_bw() +
-    scale_fill_brewer(name=SP_name, palette="Set1") + 
+    scale_fill_brewer(name=SP_name, palette="Set1") +
     xlab(SP_name) +
     ylab(y_lab) +
-    theme(legend.direction = "vertical", legend.position = leg_pos, legend.box = "vertical", 
+    theme(legend.direction = "vertical", legend.position = leg_pos, legend.box = "vertical",
           axis.line.x = element_line(colour = "black"),
           axis.line.y = element_line(colour = "black"),
-          panel.grid.major=element_blank(), 
-          panel.grid.minor=element_blank(),      
+          panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank(),
           panel.border = element_blank(),
           panel.margin = unit(.4, "lines"),
           text=element_text(family="Arial", size=10),
           legend.key = element_blank(),
           strip.background = element_rect(colour = "white", fill = "white",
                                           size = 0.5, linetype = "solid")
-          
-          
-          
+
+
+
     ) +
-    facet_grid(~model2, scales="free_x", space="free_x") + 
-    
+    facet_grid(~model2, scales="free_x", space="free_x") +
+
     guides(fill = guide_legend(keywidth = 0.5, keyheight = 0.5))
-}  
+}
 
 
 
@@ -93,23 +94,22 @@ draw_boxplot_models_with_X <- function(data, y_lab, leg_pos){
   y_max = max(y_max[!is.na(y_max)])
   y_min = by(data, data[, c('model', 'sp')], function(x){boxplot.stats(x$value)$stats[c(1)]})
   y_min = min(y_min[!is.na(y_min)])
-  # data$sp = factor(data$sp, levels=c("0.1", "0.2", "0.5", "1.0", ""))
-  # data$model2 = factor(data$model, levels=c("FG", "MoG1", "MoG2", "GP", "WGP", "EP", "VBO", "VQ"))
-
-  p = ggplot(data, aes(x=sp, y = value, colour = sp)) + 
-    geom_boxplot(width=1, 
+  data$sp = factor(data$sp, levels=c("0.001", "0.004", "0.02", "0.04", "0.1", "0.2", "0.5", "1.0", ""))
+  data$model2 = factor(data$model, levels=c("FG", "MoG1", "MoG2", "GP", "WGP", "EP", "VBO", "VQ"))
+  p = ggplot(data, aes(x=sp, y = value, colour = sp)) +
+    geom_boxplot(width=1,
                  position=position_dodge(1),
-                 outlier.shape = NA) + 
+                 outlier.shape = NA) +
     coord_cartesian(ylim = c(y_min - abs(y_min) * 0.1 , y_max + abs(y_max) * 0.1)) +
-    theme_bw() + 
+    theme_bw() +
     scale_colour_brewer(name=SP_name, palette="Set1") +
     xlab(SP_name) +
     ylab(y_lab) +
-    theme(legend.direction = "vertical", legend.position = "none", legend.box = "vertical", 
+    theme(legend.direction = "vertical", legend.position = "none", legend.box = "vertical",
           axis.line.x = element_line(colour = "black"),
           axis.line.y = element_line(colour = "black"),
-          panel.grid.major=element_blank(), 
-          panel.grid.minor=element_blank(),      
+          panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank(),
           panel.border = element_blank(),
           panel.margin = unit(.4, "lines"),
           text=element_text(family="Arial", size=10),
@@ -117,7 +117,7 @@ draw_boxplot_models_with_X <- function(data, y_lab, leg_pos){
           strip.background = element_rect(colour = "white", fill = "white",
                                           size = 0.5, linetype = "solid")
     ) +
-    facet_grid(~model, scales="free_x", space="free_x") + 
+    facet_grid(~model2, scales="free_x", space="free_x") +
     guides(fill = guide_legend(keywidth = 0.5, keyheight = 0.5))
   p
 }
@@ -136,18 +136,18 @@ draw_intensity <- function(data, y_lab){
   ess = data[data$model == "ESS",][c("x", "m", "v")]
   data = data[data$model != "HMC" & data$model != "ESS",]
   data$model2 = factor(data$model, levels=c("FG", "MoG1", "MoG2", "GP", "WGP", "EP", "VBO", "VQ", "HMC", "ESS"))
-  p = ggplot(data, aes(x=x, y = m, colour = sp)) + 
+  p = ggplot(data, aes(x=x, y = m, colour = sp)) +
     geom_line() +
     geom_ribbon(aes(x=x, ymin=get_quadrant(m, v, -1.96), ymax=get_quadrant(m, v, 1.96)),
                 fill="grey", alpha=.4, colour =NA) +
     scale_colour_brewer(palette="Set1") +
     xlab('') +
     ylab(y_lab) +
-    theme_bw() + 
+    theme_bw() +
 
-    theme(legend.direction = "vertical", legend.position = "none", legend.box = "vertical", 
+    theme(legend.direction = "vertical", legend.position = "none", legend.box = "vertical",
           axis.line = element_line(colour = "black"),
-          panel.grid.minor=element_blank(),      
+          panel.grid.minor=element_blank(),
           panel.border = element_blank(),
           panel.margin = unit(.4, "lines"),
           text=element_text(family="Arial", size=10),
@@ -166,22 +166,22 @@ draw_intensity <- function(data, y_lab){
     geom_line(data=hmc, aes(x=x, y=m), colour="orange", linetype="dotted") +
     geom_line(data=hmc, aes(x=x, y=get_quadrant(m, v, 1.96)), colour="orange", linetype="dotted") +
     geom_line(data=hmc, aes(x=x, y=get_quadrant(m, v, -1.96)), colour="orange", linetype="dotted")
-  p  
+  p
 }
 
 draw_mining_data <- function(data){
-  p = ggplot(data, aes(x=x, y = y)) + 
-    stat_summary(fun.y = "mean", geom = "line", position = position_dodge()) + 
-    
-    
-    theme_bw() + 
+  p = ggplot(data, aes(x=x, y = y)) +
+    stat_summary(fun.y = "mean", geom = "line", position = position_dodge()) +
+
+
+    theme_bw() +
     scale_colour_brewer(palette="Set1") +
     xlab('time') +
     ylab('event counts') +
-    theme(legend.direction = "vertical", legend.position = "none", legend.box = "vertical", 
+    theme(legend.direction = "vertical", legend.position = "none", legend.box = "vertical",
           axis.line = element_line(colour = "black"),
-          panel.grid.major=element_blank(), 
-          panel.grid.minor=element_blank(),      
+          panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank(),
           panel.border = element_blank(),
           panel.margin = unit(.4, "lines"),
           text=element_text(family="Arial", size=10),
@@ -197,28 +197,28 @@ draw_joints <- function(data){
   data = melt(data)
   data$joint = factor(as.numeric(substr(data$variable,11, 14)) + 1)
   data$name = paste(SP_name, "=", "0.04")
-  p =   ggplot(data, aes(x=joint, y = value)) + 
-    stat_summary(fun.y = "mean", geom = "bar", fill="gray", colour = "black",position = position_dodge() ) + 
-    theme_bw() + 
-    
+  p =   ggplot(data, aes(x=joint, y = value)) +
+    stat_summary(fun.y = "mean", geom = "bar", fill="gray", colour = "black",position = position_dodge() ) +
+    theme_bw() +
+
     xlab("output") +
     ylab("SMSE") +
-    theme(legend.direction = "vertical", legend.position = "none", legend.box = "vertical", 
+    theme(legend.direction = "vertical", legend.position = "none", legend.box = "vertical",
           axis.line = element_line(colour = "black"),
-          panel.grid.major=element_blank(), 
-          panel.grid.minor=element_blank(),      
+          panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank(),
           panel.border = element_blank(),
           panel.margin = unit(.4, "lines"),
           text=element_text(family="Arial", size=10),
           legend.key = element_blank(),
           strip.background = element_rect(colour = "white", fill = "white",
                                           size = 0.5, linetype = "solid")
-          
-          
+
+
     ) +
-    facet_grid(. ~ name)+ 
-    
-    
+    facet_grid(. ~ name)+
+
+
     guides(fill = guide_legend(keywidth = 0.5, keyheight = 0.5))
   p
 }
