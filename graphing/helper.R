@@ -2,6 +2,7 @@ rename_model <- function(data){
   data$model[data$model == 'MIX1'] = "MoG1"
   data$model[data$model == 'MIX2'] = "MoG2"
   data$model[data$model == 'FULL'] = "FG"
+  data$model[data$model == 'FULI'] = "IND"
   data$model[data$model == 'BASE'] = "GP"
   data$model[data$model == 'GAUS'] = "GP"
   data$model[data$model == 'WARP'] = "WGP"
@@ -19,7 +20,7 @@ draw_bar_models_with_X <- function(data, y_lab, leg_pos){
   data = rename_model(data)
   data$sp = substr(data$variable,6, 15)
   data$sp = factor(data$sp, levels=c("0.001", "0.004", "0.02", "0.04", "0.1", "0.2", "0.5", "1.0", ""))
-  data$model2 = factor(data$model, levels=c("FG", "MoG1", "MoG2", "GP", "WGP", "EP", "VBO", "VQ"))
+  data$model2 = factor(data$model, levels=c("FG", "IND", "MoG1", "MoG2", "GP", "WGP", "EP", "VBO", "VQ"))
 
   ggplot(data, aes(x=sp, y = value, fill = sp)) +
     stat_summary(fun.y = "mean", geom = "bar", position = position_dodge() ) +
@@ -62,7 +63,7 @@ draw_boxplot_models_with_X <- function(data, y_lab, leg_pos){
   y_min = by(data, data[, c('model', 'sp')], function(x){boxplot.stats(x$value)$stats[c(1)]})
   y_min = min(y_min[!is.na(y_min)])
   data$sp = factor(data$sp, levels=c("0.001", "0.004", "0.02", "0.04", "0.1", "0.2", "0.5", "1.0", ""))
-  data$model2 = factor(data$model, levels=c("FG", "MoG1", "MoG2", "GP", "WGP", "EP", "VBO", "VQ"))
+  data$model2 = factor(data$model, levels=c("FG", "IND", "MoG1", "MoG2", "GP", "WGP", "EP", "VBO", "VQ"))
   p = ggplot(data, aes(x=sp, y = value, colour = sp)) +
     geom_boxplot(width=1,
                  position=position_dodge(1),
