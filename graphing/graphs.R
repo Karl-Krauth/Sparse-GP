@@ -90,8 +90,21 @@ data = read.csv('../../graph_data/mnist_binary_NLPD_data.csv')
 p2 = draw_boxplot_models_with_X(data, "NLP", "None")
 ggsave(file=paste(output_path, 'mnist_binary_NLPD', ".pdf", sep = ""),  width=w/2, height=h, units = "cm" , device=cairo_pdf, p2)
 
-if (FALSE) {
+#sarcos data
 data = read.csv('../../graph_data/sarcos_MSSE_data.csv')
-p3 = draw_joints(data)
-}
+p1 = draw_bar_models_with_X(data, "MSSE", "None")
+ggsave(file=paste(output_path, 'sarcos_MSSE', ".pdf", sep = ""),  width=w/2, height=h, units = "cm" , device=cairo_pdf, p1)
+
+data = read.csv('../../graph_data/sarcos_NLPD_data.csv')
+p2 = draw_boxplot_models_with_X(data, "NLPD", "None")
+ggsave(file=paste(output_path, 'sarcos_NLPD', ".pdf", sep = ""),  width=w/2, height=h, units = "cm" , device=cairo_pdf, p2)
+
+#sarcos all joints data
+data = read.csv('../../graph_data/sarcos_all_joints_MSSE_data.csv')
+p1 = draw_bar_models_with_X(data, "MSSE", "None")
+ggsave(file=paste(output_path, 'sarcos_all_joints_MSSE', ".pdf", sep = ""),  width=w/2, height=h, units = "cm" , device=cairo_pdf, p1)
+
+data = read.csv('../../graph_data/sarcos_all_joints_NLPD_data.csv')
+p2 = draw_boxplot_models_with_X(data, "NLPD", "None")
+ggsave(file=paste(output_path, 'sarcos_all_joints_NLPD', ".pdf", sep = ""),  width=w/2, height=h, units = "cm" , device=cairo_pdf, p2)
 
