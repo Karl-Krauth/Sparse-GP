@@ -24,7 +24,6 @@ w = 15
 h = 7
 output_path = "./"
 
-if (FALSE) {
 # boston data
 data = read.csv('../../graph_data/boston_SSE_data.csv')
 p1 = draw_boxplot_models_with_X(data, "SSE", "None")
@@ -83,7 +82,7 @@ data = read.csv('../../graph_data/usps_NLPD_data.csv')
 p2 = draw_boxplot_models_with_X(data, "NLP", "right")
 ggsave(file=paste(output_path, "usps_NLPD", ".pdf", sep = ""),  width=w, height=h, units = "cm" , device=cairo_pdf, p2)
 
-#mnist data
+#mnist binary data
 data = read.csv('../../graph_data/mnist_binary_ER_data.csv')
 p1 = draw_bar_models_with_X(data, "error rate", "None")
 ggsave(file=paste(output_path, 'mnist_binary_ER', ".pdf", sep = ""),  width=w/2, height=h, units = "cm" , device=cairo_pdf, p1)
@@ -91,6 +90,30 @@ ggsave(file=paste(output_path, 'mnist_binary_ER', ".pdf", sep = ""),  width=w/2,
 data = read.csv('../../graph_data/mnist_binary_NLPD_data.csv')
 p2 = draw_boxplot_models_with_X(data, "NLP", "None")
 ggsave(file=paste(output_path, 'mnist_binary_NLPD', ".pdf", sep = ""),  width=w/2, height=h, units = "cm" , device=cairo_pdf, p2)
+
+# mnist binary inducing data
+inducing_data = read.csv('../../graph_data/mnist_binary_inducing_ER_data.csv')
+standard_data = read.csv('../../graph_data/mnist_binary_ER_data.csv')
+standard_data = standard_data[, -grep("0\\.00[14]", colnames(standard_data))]
+data = cbind(standard_data, inducing_data)
+p1 = draw_bar_models_with_X(data, "error rate", "None")
+ggsave(file=paste(output_path, 'mnist_binary_inducing_ER', ".pdf", sep = ""),  width=w/2, height=h, units = "cm" , device=cairo_pdf, p1)
+
+inducing_data = read.csv('../../graph_data/mnist_binary_inducing_NLPD_data.csv')
+standard_data = read.csv('../../graph_data/mnist_binary_NLPD_data.csv')
+standard_data = standard_data[, -grep("0\\.00[14]", colnames(standard_data))]
+data = cbind(standard_data, inducing_data)
+p2 = draw_boxplot_models_with_X(data, "NLP", "None")
+ggsave(file=paste(output_path, 'mnist_binary_inducing_NLPD', ".pdf", sep = ""),  width=w/2, height=h, units = "cm" , device=cairo_pdf, p2)
+
+#mnist data
+data = read.csv('../../graph_data/mnist_ER_data.csv')
+p1 = draw_bar_models_with_X(data, "error rate", "None")
+ggsave(file=paste(output_path, 'mnist_ER', ".pdf", sep = ""),  width=w/2, height=h, units = "cm" , device=cairo_pdf, p1)
+
+data = read.csv('../../graph_data/mnist_NLPD_data.csv')
+p2 = draw_boxplot_models_with_X(data, "NLP", "None")
+ggsave(file=paste(output_path, 'mnist_NLPD', ".pdf", sep = ""),  width=w/2, height=h, units = "cm" , device=cairo_pdf, p2)
 
 #sarcos data
 data = read.csv('../../graph_data/sarcos_MSSE_data.csv')
@@ -109,33 +132,33 @@ ggsave(file=paste(output_path, 'sarcos_all_joints_MSSE', ".pdf", sep = ""),  wid
 data = read.csv('../../graph_data/sarcos_all_joints_NLPD_data.csv')
 p2 = draw_boxplot_models_with_X(data, "NLPD", "None")
 ggsave(file=paste(output_path, 'sarcos_all_joints_NLPD', ".pdf", sep = ""),  width=w/2, height=h, units = "cm" , device=cairo_pdf, p2)
-}
+
 # sarcos inducing data
 inducing_data = read.csv('../../graph_data/sarcos_MSSE_data_inducing.csv')
 standard_data = read.csv('../../graph_data/sarcos_MSSE_data.csv')
-standard_data = standard_data[, -grep("0\\.0[24]", colnames(standard_data))]
+standard_data = standard_data[, -grep("0\\.00[14]", colnames(standard_data))]
 data = cbind(standard_data, inducing_data)
 p1 = draw_bar_models_with_X(data, "MSSE", "None")
 ggsave(file=paste(output_path, 'sarcos_inducing_MSSE', ".pdf", sep = ""),  width=w/2, height=h, units = "cm" , device=cairo_pdf, p1)
 
 inducing_data = read.csv('../../graph_data/sarcos_NLPD_data_inducing.csv')
 standard_data = read.csv('../../graph_data/sarcos_NLPD_data.csv')
-standard_data = standard_data[, -grep("0\\.0[24]", colnames(standard_data))]
+standard_data = standard_data[, -grep("0\\.00[14]", colnames(standard_data))]
 data = cbind(standard_data, inducing_data)
 p2 = draw_boxplot_models_with_X(data, "NLPD", "None")
 ggsave(file=paste(output_path, 'sarcos_inducing_NLPD', ".pdf", sep = ""),  width=w/2, height=h, units = "cm" , device=cairo_pdf, p2)
 
-# sarcosi all joints inducing data
+# sarcos all joints inducing data
 inducing_data = read.csv('../../graph_data/sarcos_all_joints_MSSE_data_inducing.csv')
 standard_data = read.csv('../../graph_data/sarcos_all_joints_MSSE_data.csv')
-standard_data = standard_data[, -grep("0\\.0[24]", colnames(standard_data))]
+standard_data = standard_data[, -grep("0\\.00[14]", colnames(standard_data))]
 data = cbind(standard_data, inducing_data)
 p1 = draw_bar_models_with_X(data, "MSSE", "None")
 ggsave(file=paste(output_path, 'sarcos_all_joints_inducing_MSSE', ".pdf", sep = ""),  width=w/2, height=h, units = "cm" , device=cairo_pdf, p1)
 
 inducing_data = read.csv('../../graph_data/sarcos_all_joints_NLPD_data_inducing.csv')
 standard_data = read.csv('../../graph_data/sarcos_all_joints_NLPD_data.csv')
-standard_data = standard_data[, -grep("0\\.0[24]", colnames(standard_data))]
+standard_data = standard_data[, -grep("0\\.00[14]", colnames(standard_data))]
 data = cbind(standard_data, inducing_data)
 p2 = draw_boxplot_models_with_X(data, "NLPD", "None")
 ggsave(file=paste(output_path, 'sarcos_all_joints_inducing_NLPD', ".pdf", sep = ""),  width=w/2, height=h, units = "cm" , device=cairo_pdf, p2)
