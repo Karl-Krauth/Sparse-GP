@@ -115,6 +115,21 @@ data = read.csv('../../graph_data/mnist_NLPD_data.csv')
 p2 = draw_boxplot_models_with_X(data, "NLP", "None")
 ggsave(file=paste(output_path, 'mnist_NLPD', ".pdf", sep = ""),  width=w/2, height=h, units = "cm" , device=cairo_pdf, p2)
 
+# mnist inducing data
+inducing_data = read.csv('../../graph_data/mnist_inducing_ER_data.csv')
+standard_data = read.csv('../../graph_data/mnist_ER_data.csv')
+standard_data = standard_data[, -grep("0\\.00[14]", colnames(standard_data))]
+data = cbind(standard_data, inducing_data)
+p1 = draw_bar_models_with_X(data, "error rate", "None")
+ggsave(file=paste(output_path, 'mnist_inducing_ER', ".pdf", sep = ""),  width=w/2, height=h, units = "cm" , device=cairo_pdf, p1)
+
+inducing_data = read.csv('../../graph_data/mnist_inducing_NLPD_data.csv')
+standard_data = read.csv('../../graph_data/mnist_NLPD_data.csv')
+standard_data = standard_data[, -grep("0\\.00[14]", colnames(standard_data))]
+data = cbind(standard_data, inducing_data)
+p2 = draw_boxplot_models_with_X(data, "NLP", "None")
+ggsave(file=paste(output_path, 'mnist_inducing_NLPD', ".pdf", sep = ""),  width=w/2, height=h, units = "cm" , device=cairo_pdf, p2)
+
 #sarcos data
 data = read.csv('../../graph_data/sarcos_MSSE_data.csv')
 p1 = draw_bar_models_with_X(data, "MSSE", "None")
