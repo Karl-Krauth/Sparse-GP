@@ -40,6 +40,7 @@ run_model.run_model(data['train_inputs'],
                     sparsity_factor,
                     transform,
                     True,                     # place inducting points on training data (If False use clustering)
-                    False,                    # Do not export X,
+                    False,                    # Do not export data or results
                     optimization_config={'mog': 25, 'hyp': 25, 'll': 25}, # iterations for each parameter
+                    num_samples=1000
                     )
