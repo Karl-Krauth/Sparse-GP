@@ -1,7 +1,7 @@
 import logging
 from kernel import ExtRBF
 import run_model
-from data_transformation import MeanTransformation
+import data_transformation
 from likelihood import UnivariateGaussian
 import data_source
 import numpy as np
@@ -22,51 +22,24 @@ name = 'boston'
 cond_ll = UnivariateGaussian(np.array(1.0))
 
 # defining the kernel
-kernels = [ExtRBF(data['train_X'].shape[1], variance=1, lengthscale=np.array((1.,)), ARD=False)]
+kernel = [ExtRBF(data['train_inputs'].shape[1], variance=1, lengthscale=np.array((1.,)), ARD=False)]
 
-run_model.run_model(data['train_X'],
-                    data['train_Y'],
-                    data['test_X'],
-                    data['test_Y'],
+# Transform data before training
+transform = data_transformation.MeanTransformation(data['train_inputs'], data['train_outputs'])
+
+
+run_model.run_model(data['train_inputs'],
+                    data['train_outputs'],
+                    data['test_inputs'],
+                    data['test_outputs'],
                     cond_ll,
-                    kernels,
+                    kernel,
                     method,
                     name,
                     data['id'],
                     sparsity_factor,
-
-                    # optimise hyper-parameters (hyp), posterior parameters (mog),
-                      # and likelihood parameters (ll)
-                      ['hyp', 'mog', 'll'],
-
-                    # Transform data before training
-                      MeanTransformation,
-
-                    # place inducting points on training data.
-                      # If False, they will be places using clustering
-                      True,
-
-                    # level of logging
-                      logging.DEBUG,
-
-                    # do not export training data into csv files
-                      False,
-
-                    # number of samples used for approximating the likelihood and its gradients
-                      num_samples=2000,
-
-                    # add a small latent noise to the kernel for
-                      # stability of numerical computations
-                      latent_noise=0.001,
-
-                    # for how many iterations each set of parameters will be optimised
-                      opt_per_iter={'mog': 25, 'hyp': 25, 'll': 25},
-
-                    # total number of global optimisations
-                      max_iter=200,
-
-                    # number of threads
-                      n_threads=1,
-
-                    # size of each partition of data
-                      partition_size=3000)
+                    transform,
+                    True,                     # place inducting points on training data (If False use clustering)
+                    False,                    # Do not export X,
+                    optimization_config={'mog': 25, 'hyp': 25, 'll': 25}, # iterations for each parameter
+                    )
