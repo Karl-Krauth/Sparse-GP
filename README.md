@@ -10,6 +10,7 @@ We require the following packages that can be directly installed from pip:
 * scikit-learn >= 0.17.1
 * scipy >= 0.17.0
 * pandas >= 0.18.0
+
 We also require a Theano installation whose installation instructions can be found
 [here](http://deeplearning.net/software/theano/install.html). We recommend configuring Theano to
 [use GPUs](http://deeplearning.net/software/theano/tutorial/using_gpu.html) which will cause the
@@ -31,6 +32,7 @@ following attributes:
 * *experiment_names*: A list of names of the datasets to use.
 * *methods*: A list of methods to use for the experiment.
 * *run_ids*: The id of the dataset partition to use.
+
 Then run
     ./src/run_experiment.py -f JSON_FILE_NAME
 the script will then run all possible combinations of configurations found in the json file. An
