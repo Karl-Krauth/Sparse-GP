@@ -20,11 +20,14 @@ code to perform an order of magnitude faster.
 The script found at `src/run_experiments.py` allows us to run the experiments described in the
 paper. `run_experiment.py` makes use of various flags to specify the configuration of the
 experiment. For example
+```
     ./src/run_experiment.py -e mnist -m full -s 0.04 -o -p 500
+```
 makes predictions on the mnist dataset, with a full covariance posterior, a sparsity factor
 of 0.04, stochastic optimization with a minibatch of size 500. For full details on each flag run
+```
     ./src/run_experiment.py -h
-
+```
 We also support launching multiple experiments at once, although we recommend only doing so for
 small scale experiments. To run multiple experiments at once create a json file which contains the
 following attributes:
@@ -34,7 +37,9 @@ following attributes:
 * *run_ids*: The id of the dataset partition to use.
 
 Then run
+```
     ./src/run_experiment.py -f JSON_FILE_NAME
+```
 the script will then run all possible combinations of configurations found in the json file. An
 example json file can be found in `./experiment_configs.json`.
 
