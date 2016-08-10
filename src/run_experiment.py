@@ -67,6 +67,8 @@ def setup_args():
                         help='The number of threads to run for a large scale experiment.')
     parser.add_argument('-p', '--partition_size', type=int, default=argparse.SUPPRESS,
                         help='The size of sample partitions for a large scale experiment.')
+    parser.add_argument('-o', '--optimize_stochastic', action='store_true',
+                        help='Whether to optimize the model stochastically.')
     return vars(parser.parse_args())
 
 

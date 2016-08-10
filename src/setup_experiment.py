@@ -241,7 +241,8 @@ def creep_experiment(method, sparsity_factor, run_id):
 
 
 def mnist_experiment(method, sparsity_factor, run_id,
-                     image=None, n_threads=1, partition_size=3000):
+                     image=None, n_threads=1, partition_size=3000,
+                     optimize_stochastic=False):
     """
     Run the mnist experiment.
 
@@ -280,11 +281,13 @@ def mnist_experiment(method, sparsity_factor, run_id,
                                n_threads=n_threads,
                                ftol=10,
                                model_image_dir=image,
-                               partition_size=partition_size)
+                               partition_size=partition_size,
+                               optimize_stochastic=optimize_stochastic)
 
 
 def mnist_binary_experiment(method, sparsity_factor, run_id,
-                            image=None, n_threads=1, partition_size=3000):
+                            image=None, n_threads=1, partition_size=3000,
+                            optimize_stochastic=False):
     """
     Run the binary mnist experiment.
 
@@ -322,11 +325,13 @@ def mnist_binary_experiment(method, sparsity_factor, run_id,
                                n_threads=n_threads,
                                ftol=10,
                                model_image_dir=image,
-                               partition_size=partition_size)
+                               partition_size=partition_size,
+                               optimize_stochastic=optimize_stochastic)
 
 
 def mnist_binary_inducing_experiment(method, sparsity_factor, run_id,
-                                     image=None, n_threads=1, partition_size=3000):
+                                     image=None, n_threads=1, partition_size=3000,
+                                     optimize_stochastic=False):
     """
     Run the binary mnist experiment with inducing point learning.
 
@@ -364,11 +369,12 @@ def mnist_binary_inducing_experiment(method, sparsity_factor, run_id,
                                n_threads=n_threads,
                                ftol=10,
                                model_image_dir=image,
-                               partition_size=partition_size)
-
+                               partition_size=partition_size,
+                               optimize_stochastic=optimize_stochastic)
 
 def sarcos_experiment(method, sparsity_factor, run_id,
-                      image=None, n_threads=1, partition_size=3000):
+                      image=None, n_threads=1, partition_size=3000,
+                      optimize_stochastic=False):
     """
     Run the sarcos experiment on two joints.
 
@@ -405,11 +411,13 @@ def sarcos_experiment(method, sparsity_factor, run_id,
                                max_iter=200,
                                partition_size=partition_size,
                                n_threads=n_threads,
-                               model_image_dir=image)
+                               model_image_dir=image,
+                               optimize_stochastic=optimize_stochastic)
 
 
 def sarcos_inducing_experiment(method, sparsity_factor, run_id,
-                              image=None, n_threads=1, partition_size=3000):
+                              image=None, n_threads=1, partition_size=3000,
+                              optimize_stochastic=False):
     """
     Run the sarcos experiment on two joints.
 
@@ -446,11 +454,13 @@ def sarcos_inducing_experiment(method, sparsity_factor, run_id,
                                max_iter=200,
                                partition_size=partition_size,
                                n_threads=n_threads,
-                               model_image_dir=image)
+                               model_image_dir=image,
+                               optimize_stochastic=optimize_stochastic)
 
 
 def sarcos_all_joints_experiment(method, sparsity_factor, run_id,
-                                 image=None, n_threads=1, partition_size=3000):
+                                 image=None, n_threads=1, partition_size=3000,
+                                 optimize_stochastic=False):
     """
     Run the sarcos experiment on all joints.
 
@@ -492,11 +502,13 @@ def sarcos_all_joints_experiment(method, sparsity_factor, run_id,
                                partition_size=partition_size,
                                ftol=10,
                                n_threads=n_threads,
-                               model_image_dir=image)
+                               model_image_dir=image,
+                               optimize_stochastic=optimize_stochastic)
 
 
 def airline_experiment(method, sparsity_factor, run_id,
-                       image=None, n_threads=1, partition_size=3000):
+                       image=None, n_threads=1, partition_size=3000,
+                       optimize_stochastic=False):
     name = 'airline'
     data = data_source.airline_data()[run_id - 1]
     print data['train_inputs'].shape, data['train_outputs'].shape, data['test_inputs'].shape, data['test_outputs'].shape
@@ -523,7 +535,8 @@ def airline_experiment(method, sparsity_factor, run_id,
                                partition_size=partition_size,
                                ftol=10,
                                n_threads=n_threads,
-                               model_image_dir=image)
+                               model_image_dir=image,
+                               optimize_stochastic=optimize_stochastic)
 
 
 def get_kernels(input_dim, num_latent_proc, ARD):

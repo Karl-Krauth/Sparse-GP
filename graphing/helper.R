@@ -23,7 +23,7 @@ draw_bar_models_with_X <- function(data, y_lab, leg_pos){
   data$model2 = factor(data$model, levels=c("FG", "IND", "MoG1", "MoG2", "GP", "WGP", "EP", "VBO", "VQ"))
 
   ggplot(data, aes(x=sp, y = value, fill = sp)) +
-    stat_summary(fun.y = "mean", geom = "bar", position = position_dodge() ) +
+    stat_summary(fun.y = "mean", geom = "bar", position = position_dodge(),color="black", size=0.2) +
     stat_summary(fun.data = mean_cl_normal, geom="linerange", colour="black", position=position_dodge(.9)) +
     theme_bw() +
     scale_fill_brewer(name=SP_name, palette="OrRd") +
@@ -37,12 +37,7 @@ draw_bar_models_with_X <- function(data, y_lab, leg_pos){
           panel.border = element_blank(),
           panel.margin = unit(.4, "lines"),
           text=element_text(family="Arial", size=10),
-          legend.key = element_blank(),
-          strip.background = element_rect(colour = "white", fill = "white",
-                                          size = 0.5, linetype = "solid")
-
-
-
+          legend.key = element_blank()
     ) +
     facet_grid(~model2, scales="free_x", space="free_x") +
 
@@ -64,26 +59,25 @@ draw_boxplot_models_with_X <- function(data, y_lab, leg_pos){
   y_min = min(y_min[!is.na(y_min)])
   data$sp = factor(data$sp, levels=c("0.001", "0.004", "0.02", "0.04", "0.1", "0.2", "0.5", "1.0", ""))
   data$model2 = factor(data$model, levels=c("FG", "IND", "MoG1", "MoG2", "GP", "WGP", "EP", "VBO", "VQ"))
-  p = ggplot(data, aes(x=sp, y = value, colour = sp)) +
+  p = ggplot(data, aes(x=sp, y = value, fill = sp)) +
     geom_boxplot(width=1,
                  position=position_dodge(1),
                  outlier.shape = NA) +
     coord_cartesian(ylim = c(y_min - abs(y_min) * 0.1 , y_max + abs(y_max) * 0.1)) +
     theme_bw() +
-    scale_colour_brewer(name=SP_name, palette="Set1") +
+    scale_fill_brewer(palette="OrRd") +
+    theme_bw() +
     xlab(SP_name) +
     ylab(y_lab) +
     theme(legend.direction = "vertical", legend.position = "none", legend.box = "vertical",
-          axis.line.x = element_line(colour = "black"),
-          axis.line.y = element_line(colour = "black"),
+          axis.line.x = element_line(colour = "black", size=0.5),
+          axis.line.y = element_line(colour = "black", size=0.5),
           panel.grid.major=element_blank(),
           panel.grid.minor=element_blank(),
-          panel.border = element_blank(),
           panel.margin = unit(.4, "lines"),
           text=element_text(family="Arial", size=10),
-          legend.key = element_blank(),
-          strip.background = element_rect(colour = "white", fill = "white",
-                                          size = 0.5, linetype = "solid")
+          panel.border = element_rect(color = "black", fill = NA, size = 0.0),
+          legend.key = element_blank()
     ) +
     facet_grid(~model2, scales="free_x", space="free_x") +
     guides(fill = guide_legend(keywidth = 0.5, keyheight = 0.5))
@@ -114,14 +108,14 @@ draw_intensity <- function(data, y_lab){
     theme_bw() +
 
     theme(legend.direction = "vertical", legend.position = "none", legend.box = "vertical",
-          axis.line = element_line(colour = "black"),
+          axis.line = element_line(color = "black"),
           panel.grid.minor=element_blank(),
           panel.border = element_blank(),
+          axis.line.x = element_line(color="black", size = 0.5),
+          axis.line.y = element_line(color="black", size = 0.5),
           panel.margin = unit(.4, "lines"),
           text=element_text(family="Arial", size=10),
           legend.key = element_blank(),
-          strip.background = element_rect(colour = "white", fill = "white",
-                                          size = 0.5, linetype = "solid"),
           axis.ticks.x = element_blank(),
           legend.title=element_blank(),
           axis.text.x = element_text(angle = 90, hjust = 1)
@@ -151,6 +145,8 @@ draw_mining_data <- function(data){
           panel.grid.major=element_blank(),
           panel.grid.minor=element_blank(),
           panel.border = element_blank(),
+          axis.line.x = element_line(color="black", size = 0.5),
+          axis.line.y = element_line(color="black", size = 0.5),
           panel.margin = unit(.4, "lines"),
           text=element_text(family="Arial", size=10),
           legend.key = element_blank(),

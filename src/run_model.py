@@ -26,14 +26,15 @@ def run_model(train_inputs,
               random_Z,
               export_X,
               optimization_config,
-              num_samples=10000,
+              num_samples=2000,
               latent_noise=0.001,
               max_iter=200,
               n_threads=1,
               model_image_dir=None,
               xtol=1e-3,
               ftol=1e-5,
-              partition_size=3000):
+              partition_size=3000,
+              optimize_stochastic=False):
     """
     Fit a model to the data (train_X, train_Y) using the method provided by 'method', and make
     predictions on 'test_X' and 'test_Y', and export the result to csv files.
@@ -43,7 +44,7 @@ def run_model(train_inputs,
     train_inputs : ndarray
         X of training points
     train_outputs : ndarray
-        Y of traiing points
+        Y of training points
     test_inputs : ndarray
         X of test points
     test_outputs : ndarray
@@ -103,14 +104,17 @@ def run_model(train_inputs,
     model : model
         the fitted model itself.
     """
+    # Temporarily transform all training and test data.
     train_outputs = transformer.transform_Y(train_outputs)
     test_outputs = transformer.transform_Y(test_outputs)
     train_inputs = transformer.transform_X(train_inputs)
     test_inputs = transformer.transform_X(test_inputs)
 
+    # Compute the number of inducing points from the sparsity factor.
     num_inducing = int(train_inputs.shape[0] * sparsity_factor)
-    git_hash, git_branch = util.get_git()
 
+    # Initialize and print experiment info.
+    git_hash, git_branch = util.get_git()
     properties = {
         'method': method,
         'sparsity_factor': sparsity_factor,
@@ -128,33 +132,57 @@ def run_model(train_inputs,
         'latent_noise:': latent_noise,
         'model_init': model_image_dir
     }
-
     model_logging.init_logger(name)
     model_logging.logger.info('experiment started for:' + str(properties))
 
+    # Initialize the model.
     if model_image_dir is not None:
         model_image_file_path = os.path.join(model_image_dir, 'model.dump')
         with open(model_image_file_path) as model_image_file:
             model = cPickle.load(model_image_file)
     elif method == 'full':
-        model = FullGaussianProcess(train_inputs, train_outputs, num_inducing, num_samples, kernel, cond_ll,
-                                    latent_noise, False, random_Z,
-                                    num_threads=n_threads, partition_size=partition_size)
+        model = FullGaussianProcess(train_inputs,
+                                    train_outputs,
+                                    num_inducing,
+                                    num_samples,
+                                    kernel,
+                                    cond_ll,
+                                    latent_noise,
+                                    False,
+                                    random_Z,
+                                    num_threads=n_threads,
+                                    partition_size=partition_size)
     elif method == 'mix1' or method == 'mix2':
         num_components = 1 if method == 'mix1' else 2
-        model = DiagonalGaussianProcess(train_inputs, train_outputs, num_inducing, num_components, num_samples,
-                                        kernel, cond_ll, latent_noise, False, random_Z,
-                                        num_threads=n_threads, partition_size=partition_size)
+        model = DiagonalGaussianProcess(train_inputs,
+                                        train_outputs,
+                                        num_inducing,
+                                        num_components,
+                                        num_samples,
+                                        kernel,
+                                        cond_ll,
+                                        latent_noise,
+                                        False,
+                                        random_Z,
+                                        num_threads=n_threads,
+                                        partition_size=partition_size)
     else:
         assert False
 
-    properties['total_time'], properties['total_evals'] = optimizer.stochastic_optimize_model(
-        model, optimization_config, max_iter, xtol, ftol)
+    # Optimize the model.
+    if optimize_stochastic:
+        properties['total_time'], properties['total_evals'] = optimizer.stochastic_optimize_model(
+            model, optimization_config, max_iter, xtol, ftol)
+    else:
+        properties['total_time'], properties['total_evals'] = optimizer.batch_optimize_model(
+            model, optimization_config, max_iter, xtol, ftol)
 
+    # Make predictions on test point.
     model_logging.logger.debug("prediction started...")
     y_pred, var_pred, nlpd = model.predict(test_inputs, test_outputs)
     model_logging.logger.debug("prediction finished")
 
+    # Export untransformed result data.
     model_logging.export_training_data(transformer.untransform_X(train_inputs),
                                        transformer.untransform_Y(train_outputs),
                                        export_X)
@@ -164,7 +192,6 @@ def run_model(train_inputs,
                                      [transformer.untransform_Y_var(var_pred)],
                                      transformer.untransform_NLPD(nlpd),
                                      export_X)
-
     model_logging.export_configuration(properties)
 
     return model
