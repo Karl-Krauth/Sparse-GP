@@ -1,7 +1,17 @@
 # Sparse-GP #
 An implementation of the model described by *TODO ADD JOURNAL REF* along with the framework to run
 the experiments described in the paper.
-[TOC]
+
+## Table of Contents ##
+[Dependencies](#dependencies)
+
+[Running experiments](#running experiments)
+
+[Experiment results](#experiment results)
+
+[Using the model](#using the model)
+
+[Architecture](#architecture)
 
 ## Dependencies ##
 We require the following packages that can be directly installed from pip:
