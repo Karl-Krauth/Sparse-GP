@@ -21,7 +21,7 @@ _log_folder_path = None
 logger = None
 
 
-def init_logger(name):
+def init_logger(name, output_to_disk=True):
     """
     Initialize the logger and the information necessary to save the model.
 
@@ -33,27 +33,30 @@ def init_logger(name):
     global logger
     global _log_folder_path
 
-    log_start_time = datetime.datetime.now()
-    folder_name = name + '_' + log_start_time.strftime('%d-%b-%Y_%Hh%Mm%Ss') + '_%d' % os.getpid()
-    _log_folder_path = os.path.join(OUTPUT_PATH, folder_name)
-    util.check_dir_exists(_log_folder_path)
-
     # Configure the logger.
     logger = logging.getLogger(name)
     logger.setLevel(LOG_LEVEL)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-    # Add a file handler to log to disk.
-    file_handler = logging.FileHandler(os.path.join(_log_folder_path, name + '.log'))
-    file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
+    if output_to_disk:
+        # Add a file handler to log to disk.
+        log_start_time = datetime.datetime.now()
+        folder_name = name + '_' + log_start_time.strftime('%d-%b-%Y_%Hh%Mm%Ss') + '_%d' % os.getpid()
+        _log_folder_path = os.path.join(OUTPUT_PATH, folder_name)
+        util.check_dir_exists(_log_folder_path)
+        file_handler = logging.FileHandler(os.path.join(_log_folder_path, name + '.log'))
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
 
     # Add a stream handler to log to stdout.
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.DEBUG)
     stream_handler.setFormatter(formatter)
     logger.addHandler(stream_handler)
+
+def disable_logger():
+    logger.setLevel(logging.CRITICAL)
 
 def export_training_data(X, Y, export_X=False):
     """
