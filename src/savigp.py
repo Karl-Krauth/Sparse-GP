@@ -17,7 +17,7 @@ class Savigp(object):
                  random_inducing=False,
                  num_samples=2000,
                  latent_noise=0.001,
-                 partition_size=1000,
+                 partition_size=100,
                  debug_output=False):
         # Init the logger and disable output if necessary.
         model_logging.init_logger('savigp', False)
@@ -38,12 +38,13 @@ class Savigp(object):
         # it unfortunately needs access to training data.
         self.model = None
 
-    def fit(train_inputs,
+    def fit(self,
+            train_inputs,
             train_outputs,
             optimization_config = None,
             optimize_stochastic=True,
             param_threshold=1e-3,
-            objective_threshold=1e-5,
+            objective_threshold=5,
             max_iterations=200):
         # Initialize the model. We should move this to init once we fix the API design issue.
         if self.posterior == 'full':
@@ -92,5 +93,5 @@ class Savigp(object):
                                        objective_threshold)
         return total_evals
 
-    def predict(test_inputs, test_outputs=None):
+    def predict(self, test_inputs, test_outputs=None):
         return self.model.predict(test_inputs, test_outputs)

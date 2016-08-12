@@ -187,8 +187,8 @@ def stochastic_optimize_model(model, optimization_config, max_iterations=200, mo
     checker = ConvergenceChecker(mog_threshold, objective_threshold)
 
     try:
-        while True or (not checker.is_converged() and
-                (max_iterations is None or current_iter < max_iterations)):
+        while (not checker.is_converged() and
+               (max_iterations is None or current_iter < max_iterations)):
             model_logging.logger.info('Iteration %d started.', current_iter)
             model.shuffle_data()
 
@@ -260,8 +260,6 @@ def sgd(model, num_batches, max_passes, idx):
 
             model_logging.logger.debug('Objective: %.4f', model.objective_function())
             num_evals += 1
-
-        model_logging.logger.debug('Overall objective: %.4f', model.overall_objective_function())
 
     return num_evals
 

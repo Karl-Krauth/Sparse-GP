@@ -165,7 +165,6 @@ def snapshot_model(model, name=MODEL_FILE_NAME):
         The model we wish to snapshot.
     """
     if _log_folder_path is None:
-        print "Warning: logger is not initialized."
         return
 
     file_path = os.path.join(_log_folder_path, name)

@@ -36,6 +36,7 @@ in the the paper to longer variables. The mappings from paper names to program n
 """
 import multiprocessing.pool
 import threading
+import warnings
 
 import GPy
 from GPy.util.linalg import mdot
@@ -336,7 +337,8 @@ class GaussianProcess(object):
                                                                    output_partition)
             mu = np.concatenate([mu, temp_mu])
             var = np.concatenate([var, temp_var])
-            nlpd = np.concatenate([nlpd, temp_nlpd])
+            if nlpd is not None:
+                nlpd = np.concatenate([nlpd, temp_nlpd])
 
         predicted_values = np.average(mu, axis=1, weights=self.gaussian_mixture.weights)
         predicted_variance = (np.average(mu ** 2, axis=1, weights=self.gaussian_mixture.weights) +
@@ -390,7 +392,10 @@ class GaussianProcess(object):
         else:
             # Initialize inducing points using clustering.
             mini_batch = sklearn.cluster.MiniBatchKMeans(self.num_inducing)
-            cluster_indices = mini_batch.fit_predict(train_inputs)
+            with warnings.catch_warnings():
+                # Squash deprecation warning in some older versions of scikit.
+                warnings.simplefilter("ignore")
+                cluster_indices = mini_batch.fit_predict(train_inputs)
 
             for i in xrange(self.num_latent):
                 inducing_locations[i] = mini_batch.cluster_centers_
