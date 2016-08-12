@@ -66,7 +66,8 @@ Each experiment that gets run generated a new directory in `../results` titled
 
 ## Using the model ##
 The model can be used directly without the experiment framework. An example can be found in
-`src/example.py`.
+`src/example.py`. In-depth documentation for the model is available in comments found in
+`src/savigp.py`.
 
 ## Architecture ##
 We give a quick summary of the design of the code. We can split the design into two sections:
@@ -95,4 +96,6 @@ The model also consists of classes to represent the posterior distribution (`gau
 `full_gaussian_mixture.py`, and `diagonal_gaussian_mixture.py`), and a kernel function
 implementation (`kernel.py`) and various likelihood models (`likelihood.py`).
 
-We also hold various utility functions in `util.py`.
+A thin wrapper around the model and various functions found in `optimizer.py` can be found in
+`src/savigp.py`. The wrapper aims to provide a scikit-like API and should be used for any
+purposes outside of the experiment framework. We also hold various utility functions in `util.py`.
