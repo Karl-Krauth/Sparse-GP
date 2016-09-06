@@ -1,5 +1,5 @@
 # Sparse-GP #
-An implementation of the model described by *TODO ADD JOURNAL REF* along with the framework to run
+An implementation of the model described in [Generic Inference in Latent Gaussian Process Models](http://arxiv.org/abs/1609.00577) along with the framework to run
 the experiments described in the paper.
 
 ## Table of Contents ##
