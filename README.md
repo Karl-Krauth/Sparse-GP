@@ -1,6 +1,5 @@
 # Sparse-GP #
-An implementation of the model described in [Generic Inference in Latent Gaussian Process Models](http://arxiv.org/abs/1609.00577) along with the framework to run
-the experiments described in the paper.
+An implementation of the model described in [Generic Inference in Latent Gaussian Process Models](http://arxiv.org/abs/1609.00577) (currently under review by an ML journal) along with the framework to run the experiments described in the paper.
 
 ## Table of Contents ##
 [Dependencies](#dependencies)
