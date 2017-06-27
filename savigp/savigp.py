@@ -118,7 +118,7 @@ class Savigp(object):
                                              num_threads=1,
                                              partition_size=self.partition_size)
         elif self.posterior == 'mix1' or self.posterior == 'mix2':
-            num_components = 1 if method == 'mix1' else 2
+            num_components = 1 if self.posterior == 'mix1' else 2
             self.model = DiagonalGaussianProcess(train_inputs,
                                                  train_outputs,
                                                  self.num_inducing,
@@ -130,7 +130,7 @@ class Savigp(object):
                                                  False,
                                                  self.random_inducing,
                                                  num_threads=1,
-                                                 partition_size=partition_size)
+                                                 partition_size=self.partition_size)
         else:
             assert False
 
