@@ -27,7 +27,7 @@ def run_model(train_inputs,
               random_Z,
               export_X,
               optimization_config,
-              num_samples=2000,
+              num_samples=10000,
               latent_noise=0.001,
               max_iter=200,
               n_threads=1,
@@ -110,7 +110,7 @@ def run_model(train_inputs,
     test_outputs = transformer.transform_Y(test_outputs)
     train_inputs = transformer.transform_X(train_inputs)
     test_inputs = transformer.transform_X(test_inputs)
-    num_samples = 10000
+
     # Compute the number of inducing points from the sparsity factor.
     num_inducing = int(train_inputs.shape[0] * sparsity_factor)
 
