@@ -8,7 +8,7 @@ from savigp import likelihood
 import run_model
 
 
-def boston_experiment(method, sparsity_factor, run_id):
+def boston_experiment(method, components, sparsity_factor, run_id, optimize_stochastic=False):
     """
     Run the boston housing experiment.
 
@@ -34,6 +34,7 @@ def boston_experiment(method, sparsity_factor, run_id):
                                cond_ll,
                                kernel,
                                method,
+                               components,
                                name,
                                data['id'],
                                sparsity_factor,
@@ -44,7 +45,7 @@ def boston_experiment(method, sparsity_factor, run_id):
                                max_iter=200)
 
 
-def wisconsin_experiment(method, sparsity_factor, run_id):
+def wisconsin_experiment(method, components, sparsity_factor, run_id):
     """
     Run the wisconsin experiment.
 
@@ -71,6 +72,7 @@ def wisconsin_experiment(method, sparsity_factor, run_id):
                                cond_ll,
                                kernel,
                                method,
+                               components,
                                name,
                                data['id'],
                                sparsity_factor,
@@ -81,7 +83,7 @@ def wisconsin_experiment(method, sparsity_factor, run_id):
                                max_iter=200)
 
 
-def mining_experiment(method, sparsity_factor, run_id):
+def mining_experiment(method, components, sparsity_factor, run_id, optimize_stochastic=False):
     """
     Run the mining experiment.
 
@@ -110,6 +112,7 @@ def mining_experiment(method, sparsity_factor, run_id):
                                cond_ll,
                                kernel,
                                method,
+                               components,
                                name,
                                data['id'],
                                sparsity_factor,
@@ -120,7 +123,7 @@ def mining_experiment(method, sparsity_factor, run_id):
                                max_iter=1)
 
 
-def usps_experiment(method, sparsity_factor, run_id):
+def usps_experiment(method, components, sparsity_factor, run_id):
     """
     Run the usps experiment.
 
@@ -148,6 +151,7 @@ def usps_experiment(method, sparsity_factor, run_id):
                                cond_ll,
                                kernel,
                                method,
+                               components,
                                name,
                                data['id'],
                                sparsity_factor,
@@ -158,7 +162,7 @@ def usps_experiment(method, sparsity_factor, run_id):
                                max_iter=300)
 
 
-def abalone_experiment(method, sparsity_factor, run_id):
+def abalone_experiment(method, components, sparsity_factor, run_id):
     """
     Run the abalone experiment.
 
@@ -187,6 +191,7 @@ def abalone_experiment(method, sparsity_factor, run_id):
                                cond_ll,
                                kernel,
                                method,
+                               components,
                                name,
                                data['id'],
                                sparsity_factor,
@@ -197,7 +202,7 @@ def abalone_experiment(method, sparsity_factor, run_id):
                                max_iter=200)
 
 
-def creep_experiment(method, sparsity_factor, run_id):
+def creep_experiment(method, components, sparsity_factor, run_id):
     """
     Run the creep experiment.
 
@@ -230,6 +235,7 @@ def creep_experiment(method, sparsity_factor, run_id):
                                cond_ll,
                                kernel,
                                method,
+                               components,
                                name,
                                data['id'],
                                sparsity_factor,
@@ -240,7 +246,7 @@ def creep_experiment(method, sparsity_factor, run_id):
                                max_iter=200)
 
 
-def mnist_experiment(method, sparsity_factor, run_id,
+def mnist_experiment(method, components, sparsity_factor, run_id,
                      image=None, n_threads=1, partition_size=3000,
                      optimize_stochastic=False):
     """
@@ -270,6 +276,7 @@ def mnist_experiment(method, sparsity_factor, run_id,
                                cond_ll,
                                kernel,
                                method,
+                               components,
                                name,
                                data['id'],
                                sparsity_factor,
@@ -285,7 +292,7 @@ def mnist_experiment(method, sparsity_factor, run_id,
                                optimize_stochastic=optimize_stochastic)
 
 
-def mnist_binary_experiment(method, sparsity_factor, run_id,
+def mnist_binary_experiment(method, components, sparsity_factor, run_id,
                             image=None, n_threads=1, partition_size=3000,
                             optimize_stochastic=False):
     """
@@ -314,6 +321,7 @@ def mnist_binary_experiment(method, sparsity_factor, run_id,
                                cond_ll,
                                kernel,
                                method,
+                               components,
                                name,
                                data['id'],
                                sparsity_factor,
@@ -329,7 +337,7 @@ def mnist_binary_experiment(method, sparsity_factor, run_id,
                                optimize_stochastic=optimize_stochastic)
 
 
-def mnist_binary_inducing_experiment(method, sparsity_factor, run_id,
+def mnist_binary_inducing_experiment(method, components, sparsity_factor, run_id,
                                      image=None, n_threads=1, partition_size=3000,
                                      optimize_stochastic=False):
     """
@@ -358,6 +366,7 @@ def mnist_binary_inducing_experiment(method, sparsity_factor, run_id,
                                cond_ll,
                                kernel,
                                method,
+                               components,
                                name,
                                data['id'],
                                sparsity_factor,
@@ -372,7 +381,7 @@ def mnist_binary_inducing_experiment(method, sparsity_factor, run_id,
                                partition_size=partition_size,
                                optimize_stochastic=optimize_stochastic)
 
-def sarcos_experiment(method, sparsity_factor, run_id,
+def sarcos_experiment(method, components, sparsity_factor, run_id,
                       image=None, n_threads=1, partition_size=3000,
                       optimize_stochastic=False):
     """
@@ -401,6 +410,7 @@ def sarcos_experiment(method, sparsity_factor, run_id,
                                cond_ll,
                                kernel,
                                method,
+                               components,
                                name,
                                data['id'],
                                sparsity_factor,
@@ -415,7 +425,7 @@ def sarcos_experiment(method, sparsity_factor, run_id,
                                optimize_stochastic=optimize_stochastic)
 
 
-def sarcos_inducing_experiment(method, sparsity_factor, run_id,
+def sarcos_inducing_experiment(method, components, sparsity_factor, run_id,
                               image=None, n_threads=1, partition_size=3000,
                               optimize_stochastic=False):
     """
@@ -444,6 +454,7 @@ def sarcos_inducing_experiment(method, sparsity_factor, run_id,
                                cond_ll,
                                kernel,
                                method,
+                               components,
                                name,
                                data['id'],
                                sparsity_factor,
@@ -458,7 +469,7 @@ def sarcos_inducing_experiment(method, sparsity_factor, run_id,
                                optimize_stochastic=optimize_stochastic)
 
 
-def sarcos_all_joints_experiment(method, sparsity_factor, run_id,
+def sarcos_all_joints_experiment(method, components, sparsity_factor, run_id,
                                  image=None, n_threads=1, partition_size=3000,
                                  optimize_stochastic=False):
     """
@@ -491,6 +502,7 @@ def sarcos_all_joints_experiment(method, sparsity_factor, run_id,
                                cond_ll,
                                kernel,
                                method,
+                               components,
                                name,
                                data['id'],
                                sparsity_factor,
@@ -506,7 +518,7 @@ def sarcos_all_joints_experiment(method, sparsity_factor, run_id,
                                optimize_stochastic=optimize_stochastic)
 
 
-def airline_experiment(method, sparsity_factor, run_id,
+def airline_experiment(method, components, sparsity_factor, run_id,
                        image=None, n_threads=1, partition_size=3000,
                        optimize_stochastic=False):
     name = 'airline'
@@ -523,6 +535,7 @@ def airline_experiment(method, sparsity_factor, run_id,
                                cond_ll,
                                kernel,
                                method,
+                               components,
                                name,
                                data['id'],
                                sparsity_factor,

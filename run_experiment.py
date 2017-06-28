@@ -25,7 +25,7 @@ EXPERIMENTS = {
     'sarcos_all_joints': setup_experiment.sarcos_all_joints_experiment,
 }
 
-METHODS = ['mix1', 'mix2', 'full']
+METHODS = ['diag', 'full']
 
 
 def main():
@@ -42,7 +42,10 @@ def main():
         # Run a single experiment from command line arguments.
         experiment = EXPERIMENTS[args['experiment_name']]
         del args['experiment_name']
-        experiment(**args)
+        if args['method'] == 'full' and args['components'] != 1:
+            print 'Only one components allowed for full Gaussian posterior.'
+        else:
+            experiment(**args)
     else:
         print 'You must either chose an experiment (-e) or a config file (-f).'
 
@@ -57,6 +60,8 @@ def setup_args():
                         help='A json file containing a list of experiment configurations to run.')
     parser.add_argument('-m', '--method', choices=METHODS, default=METHODS[0],
                         help='The type of mixture of gaussians to learn.')
+    parser.add_argument('-c', '--components', type=int, default=1,
+                        help='The number of components to use in the mixture of Gaussians.')
     parser.add_argument('-s', '--sparsity_factor', type=float, default=1.0,
                         help='The sparsity of inducing points. Value must be between 0 and 1.')
     parser.add_argument('-r', '--run_id', type=int, default=1,

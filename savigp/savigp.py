@@ -48,6 +48,7 @@ class Savigp(object):
                  likelihood,
                  kernels,
                  posterior='full',
+                 num_components=1,
                  num_inducing=100,
                  random_inducing=False,
                  num_samples=2000,
@@ -117,8 +118,7 @@ class Savigp(object):
                                              self.random_inducing,
                                              num_threads=1,
                                              partition_size=self.partition_size)
-        elif self.posterior == 'mix1' or self.posterior == 'mix2':
-            num_components = 1 if method == 'mix1' else 2
+        elif self.posterior == 'diag':
             self.model = DiagonalGaussianProcess(train_inputs,
                                                  train_outputs,
                                                  self.num_inducing,

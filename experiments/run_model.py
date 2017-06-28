@@ -19,6 +19,7 @@ def run_model(train_inputs,
               cond_ll,
               kernel,
               method,
+              num_components,
               name,
               run_id,
               sparsity_factor,
@@ -109,7 +110,7 @@ def run_model(train_inputs,
     test_outputs = transformer.transform_Y(test_outputs)
     train_inputs = transformer.transform_X(train_inputs)
     test_inputs = transformer.transform_X(test_inputs)
-
+    num_samples = 10000
     # Compute the number of inducing points from the sparsity factor.
     num_inducing = int(train_inputs.shape[0] * sparsity_factor)
 
@@ -152,8 +153,7 @@ def run_model(train_inputs,
                                     random_Z,
                                     num_threads=n_threads,
                                     partition_size=partition_size)
-    elif method == 'mix1' or method == 'mix2':
-        num_components = 1 if method == 'mix1' else 2
+    elif method == 'diag':
         model = DiagonalGaussianProcess(train_inputs,
                                         train_outputs,
                                         num_inducing,
@@ -169,6 +169,12 @@ def run_model(train_inputs,
     else:
         assert False
 
+    def cb():
+        pred_y, _, _ = model.predict(test_inputs, test_outputs)
+        pred_y = transformer.untransform_Y(pred_y)
+        t_out = transformer.untransform_Y(test_outputs)
+        print "MSSE", ((pred_y - t_out) ** 2).mean() / ((t_out - t_out.mean(0)) ** 2).mean()
+    optimizer.callback = cb 
     # Optimize the model.
     if optimize_stochastic:
         properties['total_time'], properties['total_evals'] = optimizer.stochastic_optimize_model(
