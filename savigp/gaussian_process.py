@@ -273,7 +273,7 @@ class GaussianProcess(object):
                 # Pre-compute values relevant to calculating the ell.
                 partition_size = input_partition.shape[0]
                 normal_samples, sample_means, sample_vars, samples = (
-                    self._get_samples(i, partition_size, kernel_products, diag_conditional_covars))
+                    self._get_samples_partition(i, partition_size, kernel_products, diag_conditional_covars))
                 conditional_ll, _ = self.likelihood.ll_F_Y(samples, output_partition)
                 conditional_ll = conditional_ll.astype(np.float32)
 
@@ -542,7 +542,7 @@ class GaussianProcess(object):
             # Pre-compute values relevant to calculating the gradients and ell.
             partition_size = input_partition.shape[0]
             normal_samples, sample_means, sample_vars, samples = (
-                self._get_samples(i, partition_size, kernel_products, diag_conditional_covars))
+                self._get_samples_partition(i, partition_size, kernel_products, diag_conditional_covars))
             conditional_ll, _ = self.likelihood.ll_F_Y(samples, output_partition)
             conditional_ll = conditional_ll.astype(np.float32)
 
@@ -588,7 +588,7 @@ class GaussianProcess(object):
             # Pre-compute values relevant to calculating the gradients and ell.
             partition_size = input_partition.shape[0]
             normal_samples, sample_means, sample_vars, samples = (
-                self._get_samples(i, partition_size, kernel_products, diag_conditional_covars))
+                self._get_samples_partition(i, partition_size, kernel_products, diag_conditional_covars))
             conditional_ll, _ = self.likelihood.ll_F_Y(samples, output_partition)
             conditional_ll = conditional_ll.astype(np.float32)
             # Now compute gradients and ell for this component.
@@ -629,7 +629,7 @@ class GaussianProcess(object):
             # Pre-compute values relevant to calculating the gradients and ell.
             partition_size = input_partition.shape[0]
             _, sample_means, sample_covars, samples = (
-                self._get_samples(i, partition_size, kernel_products, diag_conditional_covars))
+                self._get_samples_partition(i, partition_size, kernel_products, diag_conditional_covars))
             conditional_ll, curr_grad = self.likelihood.ll_F_Y(samples, output_partition)
             conditional_ll = conditional_ll.astype(np.float32)
 
@@ -669,7 +669,7 @@ class GaussianProcess(object):
             # Pre-compute values relevant to calculating the gradients and ell.
             partition_size = input_partition.shape[0]
             normal_samples, sample_means, sample_vars, samples = (
-                self._get_samples(i, partition_size, kernel_products, diag_conditional_covars))
+                self._get_samples_partition(i, partition_size, kernel_products, diag_conditional_covars))
             conditional_ll, _ = self.likelihood.ll_F_Y(samples, output_partition)
             conditional_ll = conditional_ll.astype(np.float32)
 
@@ -1325,8 +1325,8 @@ class GaussianProcess(object):
                 np.sum(kernel_products[j] * data_inducing_kernel[j].T, 1))
         return data_inducing_kernel, kernel_products, diag_conditional_covars
 
-    def _get_samples(self, component_index, partition_size, kernel_products,
-                     diag_conditional_covars):
+    def _get_samples_partition(self, component_index, partition_size, kernel_products,
+                               diag_conditional_covars):
         """
         Get samples used to approximate latent process values and information about them.
         For each data point in the partition, num_samples get generated.
@@ -1427,7 +1427,7 @@ class GaussianProcess(object):
             self._get_interim_matrices(input_partition))
 
         for i in xrange(self.num_components):
-            _, sample_means, sample_vars, _ = self._get_samples(
+            _, sample_means, sample_vars, _ = self._get_samples_partition(
                 i, partition_size, kernel_products, diag_conditional_covars)
             predicted_means[:, i], predicted_vars[:, i], nlpd[:, :, i] = (
                 self.likelihood.predict(sample_means.T, sample_vars.T, output_partition, self))
