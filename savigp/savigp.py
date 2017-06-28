@@ -122,7 +122,7 @@ class Savigp(object):
             self.model = DiagonalGaussianProcess(train_inputs,
                                                  train_outputs,
                                                  self.num_inducing,
-                                                 num_components,
+                                                 self.num_components,
                                                  self.num_samples,
                                                  self.kernels,
                                                  self.likelihood,
