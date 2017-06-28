@@ -130,7 +130,7 @@ class Savigp(object):
                                                  False,
                                                  self.random_inducing,
                                                  num_threads=1,
-                                                 partition_size=partition_size)
+                                                 partition_size=self.partition_size)
         else:
             assert False
 

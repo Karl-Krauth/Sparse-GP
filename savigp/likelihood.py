@@ -7,7 +7,8 @@ from numpy.ma import argsort, sort
 from scipy.linalg import inv, det
 from scipy.misc import logsumexp
 from scipy.special import erfinv
-from scipy.special._ufuncs import gammaln
+#from scipy.special._ufuncs import gammaln
+from scipy.special import gammaln
 import numpy as np
 
 import theano
