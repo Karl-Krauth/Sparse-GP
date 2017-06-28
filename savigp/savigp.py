@@ -69,6 +69,7 @@ class Savigp(object):
         self.num_samples = num_samples
         self.latent_noise = latent_noise
         self.partition_size = partition_size
+        self.num_components = num_components
 
         # We delay initializing the model until the user fits the data since
         # it unfortunately needs access to training data.
