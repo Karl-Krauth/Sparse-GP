@@ -347,6 +347,13 @@ class GaussianProcess(object):
 
         return predicted_values, predicted_variance, nlpd
 
+
+    def get_samples_posterior(self, test_inputs):
+        num_partitions = (self.num_data_points + self.partition_size - 1) / self.partition_size
+        test_inputs = test_inputs.astype(np.float32)
+        input_partitions = np.array_split(test_inputs, num_partitions)
+
+
     @staticmethod
     def _partition_data(partition_size, train_data):
         num_partitions = ((train_data.shape[0] + partition_size - 1) / partition_size)
@@ -1374,7 +1381,7 @@ class GaussianProcess(object):
                                          self.num_samples))
         return normal_samples, sample_means, sample_vars, samples
 
-    def _compile_get_samples():
+    def _compile_get_samples_partition():
         random_stream = rng_mrg.MRG_RandomStreams(seed=1)
 
         kernel_products = tensor.matrix('kernel_products')
@@ -1392,7 +1399,7 @@ class GaussianProcess(object):
         return theano.function([kernel_products, diag_conditional_covars, kern_dot_covars_dot_kern,
                                 gaussian_mixture_means, num_samples], [normal_samples, sample_means,
                                 sample_vars, samples])
-    _theano_get_samples = _compile_get_samples()
+    _theano_get_samples_partition = _compile_get_samples_partition()
 
     def _predict_partition(self, input_partition, output_partition):
         """
