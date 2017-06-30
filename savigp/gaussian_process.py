@@ -347,11 +347,79 @@ class GaussianProcess(object):
 
         return predicted_values, predicted_variance, nlpd
 
+    def get_samples_posterior(self, test_inputs, num_samples=None):
+        """
+        Get samples from the posterior
+        :param test_inputs: 
+        :param num_samples 
+        :return all_samples: (Ns, N, Q)-array with Ns samples for all N datapoints and Q latent functions
+        """
+        if num_samples is None:
+            num_samples = self.num_samples
 
-    def get_samples_posterior(self, test_inputs):
         num_partitions = (self.num_data_points + self.partition_size - 1) / self.partition_size
         test_inputs = test_inputs.astype(np.float32)
         input_partitions = np.array_split(test_inputs, num_partitions)
+        N = test_inputs.shape[0]
+
+        all_samples = np.empty([num_samples, N, self.num_latent],
+                               dtype=np.float32)
+        all_means = np.empty([self.num_latent, N, self.num_components],
+                             dtype=np.float32)
+        all_vars = np.empty([self.num_latent, N, self.num_components],
+                             dtype=np.float32)
+        normal_samples = np.random.normal(0.0, 1.0, [num_samples, self.num_latent, N])
+
+        # Compute all means and variances of posteriors for all latent functions
+        ptr_low = 0
+        for input_partition in input_partitions:
+            partition_size = input_partition.shape[0]
+            ptr_high = ptr_low + partition_size
+            data_inducing_kernel, kernel_products, diag_conditional_covars = (
+                self._get_interim_matrices(input_partition))
+
+            for k in xrange(self.num_components):
+
+                for j in xrange(self.num_latent):
+                    kern_dot_covar_dot_kern = self.gaussian_mixture.a_dot_covar_dot_a(
+                        kernel_products[j], k, j)
+                    all_means[j, ptr_low:ptr_high, k], all_vars[j, ptr_low:ptr_high, k] = (
+                        self._theano_get_means_vars_f_partition(kernel_products[j],
+                                                                 diag_conditional_covars[j],
+                                                                 kern_dot_covar_dot_kern,
+                                                                 self.gaussian_mixture.means[k, j]))
+            ptr_low = ptr_high
+
+        idx_mixture = np.random.multinomial(n=1, pvals=self.gaussian_mixture.weights,
+                                            size=[N, self.num_latent]) - 1
+        # for every latent function, sample from its mixture distribution
+        for j in xrange(self.num_latent):
+            component = np.squeeze(idx_mixture[:, j])
+            idx_all = xrange(N)
+            all_samples[:, :, j] = normal_samples[:, j, :] * np.sqrt(all_vars[j, idx_all, component]) + \
+                all_means[j, idx_all, component]
+
+        return all_samples
+
+
+    def _compile_get_means_vars_f_partition():
+        kernel_products = tensor.matrix('kernel_products')
+        diag_conditional_covars = tensor.vector('diag_conditional_covars')
+        kern_dot_covars_dot_kern = tensor.vector('kern_dot_covars_dot_kern')
+        gaussian_mixture_means = tensor.vector('gaussian_mixture_means')
+        partition_size = kernel_products.shape[0]
+
+        sample_means = tensor.dot(kernel_products, gaussian_mixture_means.T)
+        sample_vars = diag_conditional_covars + kern_dot_covars_dot_kern
+
+        return theano.function([kernel_products, diag_conditional_covars, kern_dot_covars_dot_kern,
+                                gaussian_mixture_means], [sample_means, sample_vars])
+
+    _theano_get_means_vars_f_partition = _compile_get_means_vars_f_partition()
+
+
+
+
 
 
     @staticmethod
@@ -1374,7 +1442,7 @@ class GaussianProcess(object):
             kern_dot_covar_dot_kern = self.gaussian_mixture.a_dot_covar_dot_a(kernel_products[i],
                                                                               component_index, i)
             normal_samples[i], sample_means[i], sample_vars[i], samples[:, :, i] = (
-                self._theano_get_samples(kernel_products[i],
+                self._theano_get_samples_partition(kernel_products[i],
                                          diag_conditional_covars[i],
                                          kern_dot_covar_dot_kern,
                                          self.gaussian_mixture.means[component_index, i],
