@@ -390,8 +390,11 @@ class GaussianProcess(object):
                                                                  self.gaussian_mixture.means[k, j]))
             ptr_low = ptr_high
 
-        idx_mixture = np.random.multinomial(n=1, pvals=self.gaussian_mixture.weights,
-                                            size=[N, self.num_latent]) - 1
+        cat_sample = np.transpose(np.nonzero(np.random.multinomial(n=1,
+                                                                    pvals=self.gaussian_mixture.weights,
+                                                                    size=N*self.num_latent)))[:,1]
+        idx_mixture = np.reshape(cat_sample, (N,self.num_latent))
+
         # for every latent function, sample from its mixture distribution
         for j in xrange(self.num_latent):
             component = np.squeeze(idx_mixture[:, j])
