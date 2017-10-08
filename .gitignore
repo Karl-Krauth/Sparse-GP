@@ -1,3 +1,5 @@
 *.pdf
 *.pyc
 *.swp
+/.idea
+/nongit

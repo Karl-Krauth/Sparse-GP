@@ -24,6 +24,7 @@ CREEP_DIR = os.path.join(DATA_DIR, 'creep')
 SARCOS_DIR = os.path.join(DATA_DIR, 'sarcos')
 MNIST_DIR = os.path.join(DATA_DIR, 'mnist')
 AIRLINE_DIR = os.path.join(DATA_DIR, 'airline')
+SEISMIC_DIR = os.path.join(DATA_DIR, 'seismic')
 
 def normal_generate_samples(n_samples, var, input_dim=3):
     num_samples = n_samples
@@ -373,3 +374,16 @@ def airline_data():
         'test_inputs': test.values[:, :8],
         'id': 0
     }]
+
+
+def seismic_data():
+    data = []
+    train = pandas.read_csv(os.path.join(SEISMIC_DIR, 'data.csv'), header=None)
+    data.append({
+        'train_outputs': train.ix[:, 0:3].values[:, np.newaxis],
+        'train_inputs': train.ix[:, 4:5].values[:, np.newaxis],
+        'test_outputs': train.ix[:, 0:3].values[:, np.newaxis],
+        'test_inputs': train.ix[:, 4:5].values[:, np.newaxis],
+        'id': 1
+    })
+    return data
