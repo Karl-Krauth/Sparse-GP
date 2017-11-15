@@ -292,6 +292,52 @@ def mnist_experiment(method, components, sparsity_factor, run_id,
                                optimize_stochastic=optimize_stochastic)
 
 
+def mnist8m_experiment(method, components, sparsity_factor, run_id,
+                       image=None, n_threads=1, partition_size=3000,
+                       optimize_stochastic=False):
+    """
+    Run the mnist8m experiment.
+
+    Parameters
+    ----------
+    method : str
+        The method under which to run the experiment (mix1, mix2, or full).
+    sparsity_factor : float
+        The sparsity of inducing points.
+    run_id : int
+        The id of the configuration.
+    """
+    name = 'mnist8m'
+    data = data_source.mnist8m_data()[run_id - 1]
+    kernel = [ExtRBF(data['train_inputs'].shape[1], variance=11, lengthscale=np.array((9.,)), ARD=False)
+              for _ in range(10)]
+    cond_ll = likelihood.SoftmaxLL(10)
+    transform = data_transformation.IdentityTransformation(data['train_inputs'],
+                                                           data['train_outputs'])
+
+    return run_model.run_model(data['train_inputs'],
+                               data['train_outputs'],
+                               data['test_inputs'],
+                               data['test_outputs'],
+                               cond_ll,
+                               kernel,
+                               method,
+                               components,
+                               name,
+                               data['id'],
+                               sparsity_factor,
+                               transform,
+                               False,
+                               False,
+                               optimization_config={'mog': 60, 'hyp': 15},
+                               max_iter=300,
+                               n_threads=n_threads,
+                               ftol=10,
+                               model_image_dir=image,
+                               partition_size=partition_size,
+                               optimize_stochastic=optimize_stochastic)
+
+
 def mnist_binary_experiment(method, components, sparsity_factor, run_id,
                             image=None, n_threads=1, partition_size=3000,
                             optimize_stochastic=False):
