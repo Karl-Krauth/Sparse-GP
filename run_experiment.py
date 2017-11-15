@@ -18,6 +18,7 @@ EXPERIMENTS = {
     'abalone': setup_experiment.abalone_experiment,
     'creep': setup_experiment.creep_experiment,
     'mnist': setup_experiment.mnist_experiment,
+    'mnist8m': setup_experiment.mnist8m_experiment,
     'mnist_binary': setup_experiment.mnist_binary_experiment,
     'mnist_binary_inducing': setup_experiment.mnist_binary_inducing_experiment,
     'sarcos': setup_experiment.sarcos_experiment,

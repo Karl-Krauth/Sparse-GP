@@ -7,13 +7,13 @@ The Matlab code to generate data is ``load_data.m``.
 import cPickle
 import gzip
 import os
+import subprocess
 
 import GPy
 import numpy as np
 import pandas
 
 from savigp.kernel import ExtRBF
-
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 WISC_DIR = os.path.join(DATA_DIR, 'wisconsin_cancer')
@@ -23,6 +23,7 @@ BOSTON_DIR = os.path.join(DATA_DIR, 'boston_housing')
 CREEP_DIR = os.path.join(DATA_DIR, 'creep')
 SARCOS_DIR = os.path.join(DATA_DIR, 'sarcos')
 MNIST_DIR = os.path.join(DATA_DIR, 'mnist')
+MNIST8M_DIR = os.path.join(DATA_DIR, 'infimnist')
 AIRLINE_DIR = os.path.join(DATA_DIR, 'airline')
 SEISMIC_DIR = os.path.join(DATA_DIR, 'seismic')
 
@@ -279,6 +280,33 @@ def mnist_data():
     return data
 
 
+def mnist8m_data():
+    """
+    Loads and returns data of MNIST8M dataset for all digits.
+
+    Returns
+    -------
+    data : list
+        A list of length = 1, where each element is a dictionary which contains ``train_outputs``,
+        ``train_inputs``, ``test_outputs``, ``test_inputs``, and ``id``
+
+    References
+    ----------
+    * Data is imported from this project: http://deeplearning.net/tutorial/gettingstarted.html
+    """
+    train_images, train_labels, test_images, test_labels = import_mnist8m()
+    data = []
+    data.append({
+        'train_outputs': train_labels,
+        'train_inputs': train_images,
+        'test_outputs': test_labels,
+        'test_inputs': test_images,
+        'id': 0
+    })
+
+    return data
+
+
 def mnist_binary_data():
     """
     Loads and returns data of MNIST dataset for all digits.
@@ -387,3 +415,107 @@ def seismic_data():
         'id': 1
     })
     return data
+
+
+def _read32(bytestream):
+  dt = np.dtype(np.uint32).newbyteorder('>')
+  return np.frombuffer(bytestream.read(4), dtype=dt)[0]
+
+
+def extract_images(f):
+  """Extract the images into a 4D uint8 numpy array [index, y, x, depth].
+  Args:
+    f: A file object that can be passed into a gzip reader.
+  Returns:
+    data: A 4D unit8 numpy array [index, y, x, depth].
+  Raises:
+    ValueError: If the bytestream does not start with 2051.
+  """
+  print('Extracting', f.name)
+  with gzip.GzipFile(fileobj=f) as bytestream:
+    magic = _read32(bytestream)
+    if magic != 2051:
+      raise ValueError('Invalid magic number %d in MNIST image file: %s' %
+                       (magic, f.name))
+    num_images = int(_read32(bytestream))
+    rows = int(_read32(bytestream))
+    cols = int(_read32(bytestream))
+    buf = bytestream.read(rows * cols * num_images)
+    data = np.frombuffer(buf, dtype=np.uint8)
+    data = data.reshape(num_images, rows, cols, 1)
+    return data
+
+
+def extract_labels(f, one_hot=False, num_classes=10):
+  """Extract the labels into a 1D uint8 numpy array [index].
+  Args:
+    f: A file object that can be passed into a gzip reader.
+    one_hot: Does one hot encoding for the result.
+    num_classes: Number of classes for the one hot encoding.
+  Returns:
+    labels: a 1D uint8 numpy array.
+  Raises:
+    ValueError: If the bystream doesn't start with 2049.
+  """
+  print('Extracting', f.name)
+  with gzip.GzipFile(fileobj=f) as bytestream:
+    magic = _read32(bytestream)
+    if magic != 2049:
+      raise ValueError('Invalid magic number %d in MNIST label file: %s' %
+                       (magic, f.name))
+    num_items = _read32(bytestream)
+    buf = bytestream.read(num_items)
+    labels = np.frombuffer(buf, dtype=np.uint8)
+    if one_hot:
+      return dense_to_one_hot(labels, num_classes)
+    return labels
+
+
+def dense_to_one_hot(labels_dense, num_classes):
+  """Convert class labels from scalars to one-hot vectors."""
+  num_labels = labels_dense.shape[0]
+  index_offset = np.arange(num_labels) * num_classes
+  labels_one_hot = np.zeros((num_labels, num_classes))
+  labels_one_hot.flat[index_offset + labels_dense.ravel()] = 1
+  return labels_one_hot
+
+
+def process_mnist(images):
+    assert images.shape[3] == 1
+    images = images.reshape(images.shape[0],
+                            images.shape[1] * images.shape[2])
+    # Convert from [0, 255] -> [0.0, 1.0].
+    images = images.astype(np.float32)
+    images = np.multiply(images, 1.0 / 255.0)
+
+    return images
+
+
+def get_mnist8m_data():
+    print "Getting mnist8m data ..."
+    os.chdir('experiments/data')
+    subprocess.call(["./get_mnist8m_data.sh"])
+    os.chdir("../../")
+    print "done"
+
+
+def import_mnist8m():
+    if not os.path.isdir(MNIST8M_DIR): # directory does not exist, download the data
+        get_mnist8m_data()
+
+    with open(os.path.join(MNIST8M_DIR, "train-patterns.gz")) as f:
+        train_images = extract_images(f)
+        train_images = process_mnist(train_images)
+
+    with open(os.path.join(MNIST8M_DIR, "train-labels.gz")) as f:
+        train_labels = extract_labels(f, one_hot=True)
+
+    with open(os.path.join(MNIST8M_DIR, "test-patterns.gz")) as f:
+        test_images = extract_images(f)
+        test_images = process_mnist(test_images)
+
+    with open(os.path.join(MNIST8M_DIR, "test-labels.gz")) as f:
+        test_labels = extract_labels(f, one_hot=True)
+
+    return train_images, train_labels, test_images, test_labels
+
