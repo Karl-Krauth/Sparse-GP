@@ -24,6 +24,7 @@ EXPERIMENTS = {
     'sarcos': setup_experiment.sarcos_experiment,
     'sarcos_inducing': setup_experiment.sarcos_inducing_experiment,
     'sarcos_all_joints': setup_experiment.sarcos_all_joints_experiment,
+    'seismic': setup_experiment.seismic_experiment,
 }
 
 METHODS = ['diag', 'full']

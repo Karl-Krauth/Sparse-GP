@@ -600,3 +600,39 @@ def airline_experiment(method, components, sparsity_factor, run_id,
 def get_kernels(input_dim, num_latent_proc, ARD):
     return [ExtRBF(input_dim, variance=1, lengthscale=np.array((1.,)), ARD=ARD)
             for _ in range(num_latent_proc)]
+
+
+def seismic_experiment(method, components, sparsity_factor, run_id,
+                       image=None, n_threads=1, partition_size=3000,
+                       optimize_stochastic=False):
+    name = 'seismic'
+    data = data_source.seismic_data()[0]
+    kernel = get_kernels(data['train_inputs'].shape[1], 8, True)
+    cond_ll = likelihood.SeismicLL(4)
+
+    transform = data_transformation.MeanStdTransformation(data['train_inputs'],
+                                                          data['train_outputs'])
+    return run_model.run_model(data['train_inputs'],
+                               data['train_outputs'],
+                               data['test_inputs'],
+                               data['test_outputs'],
+                               cond_ll,
+                               kernel,
+                               method,
+                               components,
+                               name,
+                               data['id'],
+                               sparsity_factor,
+                               transform,
+                               False,
+                               False,
+                               optimization_config={'mog': 5, 'hyp': 2, 'inducing': 1},
+                               max_iter=200,
+                               partition_size=partition_size,
+                               ftol=10,
+                               n_threads=n_threads,
+                               model_image_dir=image,
+                               optimize_stochastic=optimize_stochastic)
+
+if __name__ == '__main__':
+    seismic_experiment('full', 1, 0.1, 1, None)

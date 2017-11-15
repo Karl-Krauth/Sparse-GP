@@ -568,3 +568,40 @@ class CogLL(Likelihood):
     def nlpd_dim(self):
         return self.P + 1
 
+
+class SeismicLL(Likelihood):
+
+    def __init__(self, P):
+        Likelihood.__init__(self)
+        self.P = P
+        self.f_num = 2 * P
+        self.sigma = 1
+
+    def ll_F_Y(self, F, Y):
+        depth = F[:, :, 0:self.P]
+        vel = F[:, :, self.P:]
+
+        G = np.zeros((F.shape[0], Y.shape[0], Y.shape[1]))
+
+        G[:, :, 0] = 2. * depth[:, :, 0] / vel[:, :, 0]
+        for p in range(1, self.P):
+            G[:, :, p] = G[:, :, p-1] + 2 * (depth[:, :, p] - depth[:, :, p - 1]) / vel[:, :, p]
+
+        return ((G - Y) ** 2).sum(axis=2), None
+
+    def get_params(self):
+        return np.array(np.log([self.sigma]))
+
+    def get_num_params(self):
+        return 1
+
+    def ell(self, mu, sigma, Y):
+        pass
+
+    def output_dim(self):
+        return self.P
+
+    def map_Y_to_f(self, Y):
+        f_init = 10 * np.ones(self.f_num)
+        f_init[:4] = 1.0
+        return f_init
