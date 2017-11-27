@@ -607,7 +607,13 @@ def seismic_experiment(method, components, sparsity_factor, run_id,
                        optimize_stochastic=False):
     name = 'seismic'
     data = data_source.seismic_data()[0]
-    kernel = get_kernels(data['train_inputs'].shape[1], 8, True)
+
+    prior_var = [900, 5625, 57600, 108900, 38025, 52900, 75625, 133225]
+
+    input_dim = data['train_inputs'].shape[1]
+
+    kernel = [ExtRBF(input_dim, variance=prior_var[i], lengthscale=np.array((1.,)), ARD=True) for i in range(len(prior_var))]
+
     cond_ll = likelihood.SeismicLL(4)
 
     transform = data_transformation.IdentityTransformation(data['train_inputs'],
