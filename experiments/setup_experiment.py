@@ -610,8 +610,8 @@ def seismic_experiment(method, components, sparsity_factor, run_id,
     kernel = get_kernels(data['train_inputs'].shape[1], 8, True)
     cond_ll = likelihood.SeismicLL(4)
 
-    transform = data_transformation.MeanStdTransformation(data['train_inputs'],
-                                                          data['train_outputs'])
+    transform = data_transformation.IdentityTransformation(data['train_inputs'],
+                                                           data['train_outputs'])
     return run_model.run_model(data['train_inputs'],
                                data['train_outputs'],
                                data['test_inputs'],
@@ -635,4 +635,4 @@ def seismic_experiment(method, components, sparsity_factor, run_id,
                                optimize_stochastic=optimize_stochastic)
 
 if __name__ == '__main__':
-    seismic_experiment('full', 1, 0.1, 1, None)
+    seismic_experiment('full', 1, 1.0, 1, None)

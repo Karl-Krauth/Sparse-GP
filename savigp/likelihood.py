@@ -599,9 +599,12 @@ class SeismicLL(Likelihood):
         pass
 
     def output_dim(self):
-        return self.P
+        return 2 * self.P
 
     def map_Y_to_f(self, Y):
-        f_init = 10 * np.ones(self.f_num)
+        f_init = np.zeros(self.f_num)
         f_init[:4] = 1.0
         return f_init
+
+    def predict(self, mu, sigma, Ys, model=None):
+        return mu, sigma, np.zeros((Ys.shape[0], 1))
