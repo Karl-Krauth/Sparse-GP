@@ -35,7 +35,9 @@ def run_model(train_inputs,
               xtol=1e-3,
               ftol=1e-5,
               partition_size=3000,
-              optimize_stochastic=False):
+              optimize_stochastic=False,
+              GP_mean=None
+              ):
     """
     Fit a model to the data (train_X, train_Y) using the method provided by 'method', and make
     predictions on 'test_X' and 'test_Y', and export the result to csv files.
@@ -152,7 +154,9 @@ def run_model(train_inputs,
                                     False,
                                     random_Z,
                                     num_threads=n_threads,
-                                    partition_size=partition_size)
+                                    partition_size=partition_size,
+                                    GP_mean=GP_mean
+                                    )
     elif method == 'diag':
         model = DiagonalGaussianProcess(train_inputs,
                                         train_outputs,
@@ -165,7 +169,9 @@ def run_model(train_inputs,
                                         False,
                                         random_Z,
                                         num_threads=n_threads,
-                                        partition_size=partition_size)
+                                        partition_size=partition_size,
+                                        GP_mean=GP_mean
+                                        )
     else:
         assert False
 

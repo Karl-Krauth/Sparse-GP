@@ -608,13 +608,17 @@ def seismic_experiment(method, components, sparsity_factor, run_id,
     name = 'seismic'
     data = data_source.seismic_data()[0]
 
-    prior_var = [900, 5625, 57600, 108900, 38025, 52900, 75625, 133225]
+    prior_var = np.array([900, 5625, 57600, 108900, 38025, 52900, 75625, 133225]) / 10
+
+    prior_mu = [200, 500, 1600, 2200, 1950, 2300, 2750, 3650]
+
+    sigma2y = [0.0006, 0.0025, 0.0056, 0.0100]
 
     input_dim = data['train_inputs'].shape[1]
 
-    kernel = [ExtRBF(input_dim, variance=prior_var[i], lengthscale=np.array((1.,)), ARD=True) for i in range(len(prior_var))]
+    kernel = [ExtRBF(input_dim, variance=prior_var[i], lengthscale=np.array((1,)), ARD=True) for i in range(len(prior_var))]
 
-    cond_ll = likelihood.SeismicLL(4)
+    cond_ll = likelihood.SeismicLL(4, sigma2y)
 
     transform = data_transformation.IdentityTransformation(data['train_inputs'],
                                                            data['train_outputs'])
@@ -631,14 +635,16 @@ def seismic_experiment(method, components, sparsity_factor, run_id,
                                sparsity_factor,
                                transform,
                                False,
-                               False,
-                               optimization_config={'mog': 5, 'hyp': 2, 'inducing': 1},
-                               max_iter=200,
+                               True,
+                               optimization_config={'mog': 12000},
+                               max_iter=10,
                                partition_size=partition_size,
-                               ftol=10,
+                               ftol=1,
                                n_threads=n_threads,
                                model_image_dir=image,
-                               optimize_stochastic=optimize_stochastic)
+                               GP_mean= prior_mu,
+                               num_samples=100000,
+                               )
 
 if __name__ == '__main__':
     seismic_experiment('full', 1, 1.0, 1, None)

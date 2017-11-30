@@ -113,9 +113,17 @@ class GaussianProcess(object):
                  exact_ell=False,
                  inducing_on_inputs=False,
                  num_threads=1,
-                 partition_size=3000):
+                 partition_size=3000,
+                 GP_mean = None
+                 ):
         train_inputs = train_inputs.astype(np.float32)
         train_outputs = train_outputs.astype(np.float32)
+
+        # mean for Gaussian Processes
+        if GP_mean is None:
+            self.GP_mean = np.zeros(self.num_latent)
+        else:
+            self.GP_mean = GP_mean
 
         # Initialize variables to keep track of various model dimensions.
         self.num_latent = len(kernels)
@@ -793,7 +801,7 @@ class GaussianProcess(object):
             for j in xrange(self.num_latent):
                 grad[i, j] = -(self.gaussian_mixture.weights[i] *
                                scipy.linalg.cho_solve((self.kernel_matrix.cholesky[j], True),
-                               self.gaussian_mixture.means[i, j]))
+                                                      (self.gaussian_mixture.means[i, j] - self.GP_mean[j])))
 
         return grad
 
@@ -832,8 +840,8 @@ class GaussianProcess(object):
         for i in xrange(self.num_components):
             for j in xrange(self.num_latent):
                 mean = self.gaussian_mixture.means[i, j]
-                mean_dot_kern_inv_dot_mean = mdot(mean.T, scipy.linalg.cho_solve(
-                    (self.kernel_matrix.cholesky[j], True), mean))
+                mean_dot_kern_inv_dot_mean = mdot(mean.T - self.GP_mean[j], scipy.linalg.cho_solve(
+                    (self.kernel_matrix.cholesky[j], True), mean - self.GP_mean[j]))
                 grad[i] += (
                     self.num_inducing * np.log(2 * np.pi) + self.kernel_matrix.log_determinant[j] +
                     mean_dot_kern_inv_dot_mean + self.gaussian_mixture.trace_with_covar(
@@ -1100,7 +1108,7 @@ class GaussianProcess(object):
             for j in xrange(self.num_hyper_params):
                 # TODO(karl): Name this something more meaningful or refactor.
                 val = (np.ones(conditional_ll.shape, dtype=np.float32) / sample_vars[i] *
-                       grad_vars[:, j] - 2.0 * normal_samples[i] / np.sqrt(sample_vars[i]) * 
+                       grad_vars[:, j] - 2.0 * normal_samples[i] / np.sqrt(sample_vars[i]) *
                        grad_means[:, j] - np.square(normal_samples[i]) / sample_vars[i] *
                        grad_vars[:, j])
                 mean = util.weighted_average(conditional_ll, val, self.num_samples)

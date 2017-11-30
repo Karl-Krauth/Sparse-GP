@@ -15,12 +15,12 @@ class DiagonalGaussianProcess(gaussian_process.GaussianProcess):
 
     def __init__(self, train_inputs, train_outputs, num_inducing, num_components, num_samples, kernels,
                  likelihood, latent_noise=0, exact_ell=False, inducing_on_inputs=False,
-                 num_threads=1, partition_size=3000):
+                 num_threads=1, partition_size=3000, GP_mean=None):
         super(DiagonalGaussianProcess, self).__init__(
                                                       train_inputs, train_outputs, num_inducing,
                                                       num_components, num_samples, kernels, likelihood,
                                                       latent_noise, exact_ell, inducing_on_inputs,
-                                                      num_threads, partition_size)
+                                                      num_threads, partition_size, GP_mean=GP_mean)
 
     def _get_gaussian_mixture(self, initial_mean):
         return diagonal_gaussian_mixture.DiagonalGaussianMixture(

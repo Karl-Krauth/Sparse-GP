@@ -571,11 +571,11 @@ class CogLL(Likelihood):
 
 class SeismicLL(Likelihood):
 
-    def __init__(self, P):
+    def __init__(self, P, sigma2y):
         Likelihood.__init__(self)
         self.P = P
         self.f_num = 2 * P
-        self.sigma = 1
+        self.sigma2y = sigma2y
 
     def ll_F_Y(self, F, Y):
         depth = F[:, :, 0:self.P]
@@ -587,7 +587,7 @@ class SeismicLL(Likelihood):
         for p in range(1, self.P):
             G[:, :, p] = G[:, :, p-1] + 2 * (depth[:, :, p] - depth[:, :, p - 1]) / vel[:, :, p]
 
-        return -((G - Y) ** 2).sum(axis=2), None
+        return ((- (0.5 * ((G - Y) ** 2) / self.sigma2y) -0.5 * np.log(2 * np.pi) - 0.5 * np.log(self.sigma2y))).sum(axis=2), None
 
     def get_params(self):
         return np.array(np.log([self.sigma]))
@@ -602,9 +602,7 @@ class SeismicLL(Likelihood):
         return 2 * self.P
 
     def map_Y_to_f(self, Y):
-        f_init = np.zeros(self.f_num)
-        f_init[:4] = 1.0
-        return f_init
+        return np.array([200, 500, 1600, 2200, 1950, 2300, 2750, 3650])
 
     def predict(self, mu, sigma, Ys, model=None):
         return mu, sigma, np.zeros((Ys.shape[0], 1))
