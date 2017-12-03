@@ -565,7 +565,7 @@ class GaussianProcess(object):
                 import time
                 start = time.time()
                 result = func(input_partition, output_partition)
-                print time.time() - start
+                # print time.time() - start
             except Exception as e:
                 import traceback
                 traceback.print_exc()
