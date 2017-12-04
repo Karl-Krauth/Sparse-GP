@@ -31,7 +31,8 @@ test_inputs = transform.transform_X(data['test_inputs'])
 gp = Savigp(likelihood=likelihood,
             kernels=kernel,
             num_inducing=num_inducing,
-            debug_output=True)
+            debug_output=True,
+            log_to_disk=True)
 
 # Now fit the model to our training data.
 gp.fit(train_inputs, train_outputs)
