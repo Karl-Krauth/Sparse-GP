@@ -10,7 +10,7 @@ import numpy as np
 import gaussian_process
 import util
 
-OUTPUT_PATH = '../results/'
+OUTPUT_PATH = './results/'
 CONFIG_FILE_NAME = 'config.csv'
 PREDICTIONS_FILE_NAME = 'predictions.csv'
 TRAINING_FILE_NAME = 'train.csv'
