@@ -54,10 +54,9 @@ class Savigp(object):
                  num_samples=2000,
                  latent_noise=0.001,
                  partition_size=100,
-                 debug_output=False,
-                 log_to_disk=False):
+                 debug_output=False):
         # Init the logger and disable output if necessary.
-        model_logging.init_logger('savigp', log_to_disk)
+        model_logging.init_logger('savigp', False)
         if not debug_output:
             model_logging.disable_logger()
 
