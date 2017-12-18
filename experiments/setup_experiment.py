@@ -45,7 +45,7 @@ def boston_experiment(method, components, sparsity_factor, run_id, optimize_stoc
                                max_iter=200)
 
 
-def wisconsin_experiment(method, components, sparsity_factor, run_id):
+def wisconsin_experiment(method, components, sparsity_factor, run_id, optimize_stochastic=False):
     """
     Run the wisconsin experiment.
 
@@ -123,7 +123,7 @@ def mining_experiment(method, components, sparsity_factor, run_id, optimize_stoc
                                max_iter=1)
 
 
-def usps_experiment(method, components, sparsity_factor, run_id):
+def usps_experiment(method, components, sparsity_factor, run_id, optimize_stochastic=False):
     """
     Run the usps experiment.
 
@@ -162,7 +162,7 @@ def usps_experiment(method, components, sparsity_factor, run_id):
                                max_iter=300)
 
 
-def abalone_experiment(method, components, sparsity_factor, run_id):
+def abalone_experiment(method, components, sparsity_factor, run_id, optimize_stochastic=False):
     """
     Run the abalone experiment.
 
@@ -202,7 +202,7 @@ def abalone_experiment(method, components, sparsity_factor, run_id):
                                max_iter=200)
 
 
-def creep_experiment(method, components, sparsity_factor, run_id):
+def creep_experiment(method, components, sparsity_factor, run_id, optimize_stochastic=False):
     """
     Run the creep experiment.
 

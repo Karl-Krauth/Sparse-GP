@@ -126,7 +126,7 @@ def mining_data():
       1979;66(1):191-3.
     """
     data = []
-    train = pandas.read_csv(os.path,join(MINING_DIR, 'data.csv'), header=None)
+    train = pandas.read_csv(os.path.join(MINING_DIR, 'data.csv'), header=None)
     data.append({
         'train_outputs': train.ix[:, 0].values[:, np.newaxis],
         'train_inputs': train.ix[:, 1].values[:, np.newaxis],
