@@ -76,6 +76,13 @@ def setup_args():
                         help='The size of sample partitions for a large scale experiment.')
     parser.add_argument('-o', '--optimize_stochastic', action='store_true',
                         help='Whether to optimize the model stochastically.')
+    parser.add_argument('-t', '--max_iter', type=int, default=argparse.SUPPRESS,
+                        help='The maximum number of global iterations.')
+    parser.add_argument('-l', '--num_samples', type=int, default=argparse.SUPPRESS,
+                        help='Number of samples for Monte Carlo Estimation.')
+
+
+
     return vars(parser.parse_args())
 
 
