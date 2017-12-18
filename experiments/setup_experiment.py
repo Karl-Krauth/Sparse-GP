@@ -42,7 +42,8 @@ def boston_experiment(method, components, sparsity_factor, run_id, optimize_stoc
                                True,
                                False,
                                optimization_config={'mog': 25, 'hyp': 25, 'll': 25, 'inducing': 8},
-                               max_iter=200)
+                               max_iter=200,
+                               optimize_stochastic=optimize_stochastic)
 
 
 def wisconsin_experiment(method, components, sparsity_factor, run_id):
