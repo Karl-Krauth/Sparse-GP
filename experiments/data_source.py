@@ -247,7 +247,8 @@ def mnist_data():
     # Download the MNIST dataset if it is not present
     data_dir, data_file = os.path.split(dataset)
 
-    if (not os.path.isfile(dataset)) and data_file == 'mnist.pkl.gz':
+    if not os.path.isdir(MNIST_DIR): # directory does not exist, download the data
+        os.makedirs(MNIST_DIR)
         import urllib
         origin = (
             'http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz'
