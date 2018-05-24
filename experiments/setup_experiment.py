@@ -611,7 +611,7 @@ def seismic_experiment(method, components, sparsity_factor, run_id,
     #TODO
     # not the divide by 10 is not correct and just for testing.
     # the original var (without dividing is not working)
-    prior_var = np.array([900, 5625, 57600, 108900, 38025, 52900, 75625, 133225]) / 10
+    prior_var = np.array([900, 5625, 57600, 108900, 38025, 52900, 75625, 133225])
 
     prior_mu = [200, 500, 1600, 2200, 1950, 2300, 2750, 3650]
 
