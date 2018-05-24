@@ -42,10 +42,11 @@ def boston_experiment(method, components, sparsity_factor, run_id, optimize_stoc
                                True,
                                False,
                                optimization_config={'mog': 25, 'hyp': 25, 'll': 25, 'inducing': 8},
-                               max_iter=200)
+                               max_iter=200,
+                               optimize_stochastic=optimize_stochastic)
 
 
-def wisconsin_experiment(method, components, sparsity_factor, run_id):
+def wisconsin_experiment(method, components, sparsity_factor, run_id, optimize_stochastic=False):
     """
     Run the wisconsin experiment.
 
@@ -123,7 +124,7 @@ def mining_experiment(method, components, sparsity_factor, run_id, optimize_stoc
                                max_iter=1)
 
 
-def usps_experiment(method, components, sparsity_factor, run_id):
+def usps_experiment(method, components, sparsity_factor, run_id, optimize_stochastic=False):
     """
     Run the usps experiment.
 
@@ -162,7 +163,7 @@ def usps_experiment(method, components, sparsity_factor, run_id):
                                max_iter=300)
 
 
-def abalone_experiment(method, components, sparsity_factor, run_id):
+def abalone_experiment(method, components, sparsity_factor, run_id, optimize_stochastic=False):
     """
     Run the abalone experiment.
 
@@ -202,7 +203,7 @@ def abalone_experiment(method, components, sparsity_factor, run_id):
                                max_iter=200)
 
 
-def creep_experiment(method, components, sparsity_factor, run_id):
+def creep_experiment(method, components, sparsity_factor, run_id, optimize_stochastic=False):
     """
     Run the creep experiment.
 
@@ -294,7 +295,8 @@ def mnist_experiment(method, components, sparsity_factor, run_id,
 
 def mnist8m_experiment(method, components, sparsity_factor, run_id,
                        image=None, n_threads=1, partition_size=3000,
-                       optimize_stochastic=False):
+                       optimize_stochastic=True, num_samples=100,
+                       max_iter=8000):
     """
     Run the mnist8m experiment.
 
@@ -330,7 +332,8 @@ def mnist8m_experiment(method, components, sparsity_factor, run_id,
                                False,
                                False,
                                optimization_config={'mog': 60, 'hyp': 15},
-                               max_iter=300,
+                               num_samples=num_samples,
+                               max_iter=max_iter,
                                n_threads=n_threads,
                                ftol=10,
                                model_image_dir=image,

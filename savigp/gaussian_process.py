@@ -573,7 +573,7 @@ class GaussianProcess(object):
                 import time
                 start = time.time()
                 result = func(input_partition, output_partition)
-                print time.time() - start
+                # print time.time() - start
             except Exception as e:
                 import traceback
                 traceback.print_exc()
@@ -584,12 +584,13 @@ class GaussianProcess(object):
                 else:
                     final_result[0] = map(sum, zip(final_result[0], result))
 
-        thread_pool = multiprocessing.pool.ThreadPool(processes=self.num_threads)
+        # thread_pool = multiprocessing.pool.ThreadPool(processes=self.num_threads)
         train_index_end = self.train_index_start + self.train_len
         func_args = zip(self.input_partitions[self.train_index_start:train_index_end],
                         self.output_partitions[self.train_index_start:train_index_end])
-        thread_pool.map(func_wrapper, func_args)
-        thread_pool.close()
+        # thread_pool.map(func_wrapper, func_args)
+        map(func_wrapper, func_args)
+        # thread_pool.close()
 
         return final_result[0]
 
