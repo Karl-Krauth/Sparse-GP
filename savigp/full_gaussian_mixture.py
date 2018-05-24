@@ -63,11 +63,10 @@ class FullGaussianMixture(gaussian_mixture.GaussianMixture):
         return theano.function([a, covar], result)
     _theano_a_dot_covar_dot_a = _compile_a_dot_covar_dot_a()
 
-    def mean_prod_sum_covar(self, component_index, latent_index):
+    def mean_prod_sum_covar(self, component_index, latent_index, offset=0):
         assert component_index == 0
-        return (mdot(self.means[0, latent_index, :, np.newaxis],
-                self.means[0, latent_index, :, np.newaxis].T) +
-                self.covars[latent_index])
+        mu = self.means[0, latent_index, :, np.newaxis] - offset
+        return mdot(mu, mu.T) + self.covars[latent_index]
 
     def covar_dot_a(self, a, component_index, latent_index):
         assert component_index == 0

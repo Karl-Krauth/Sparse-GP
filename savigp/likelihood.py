@@ -603,6 +603,8 @@ class SeismicLL(Likelihood):
 
     def map_Y_to_f(self, Y):
         return np.array([200, 500, 1600, 2200, 1950, 2300, 2750, 3650])
+        # Now considering non-zero mean GP
+        # return np.array([0, 0, 0, 0, 0, 0, 0, 0])
 
     def predict(self, mu, sigma, Ys, model=None):
         return mu, sigma, np.zeros((Ys.shape[0], 1))

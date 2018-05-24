@@ -202,7 +202,7 @@ class GaussianMixture(object):
         """
         raise NotImplementedError
 
-    def mean_prod_sum_covar(self, k, j):
+    def mean_prod_sum_covar(self, k, j, offset=0):
         # TODO(karl): comment
         raise NotImplementedError
 

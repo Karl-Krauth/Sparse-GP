@@ -73,8 +73,9 @@ class DiagonalGaussianMixture(gaussian_mixture.GaussianMixture):
     def a_dot_covar_dot_a(self, a, k, j):
         return np.diagonal(mdot(a, np.diag(self.covars[k, j, :]), a.T))
 
-    def mean_prod_sum_covar(self, k, j):
-        return mdot(self.means[k, j, np.newaxis].T, self.means[k, j, np.newaxis]) + np.diag(self.covars[k, j])
+    def mean_prod_sum_covar(self, k, j, offset=0):
+        mu = self.means[k, j, np.newaxis] - offset
+        return mdot(mu.T, ) + np.diag(self.covars[k, j])
 
     def grad_trace_a_inv_dot_covars(self, chol_a, k, j):
         a_inv = util.inv_chol(chol_a)

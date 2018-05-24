@@ -903,7 +903,7 @@ class GaussianProcess(object):
                 -0.5 * self.gaussian_mixture.weights[i] * (self.kernel_matrix.inverse[latent_index] -
                 scipy.linalg.cho_solve((self.kernel_matrix.cholesky[latent_index], True),
                 scipy.linalg.cho_solve((self.kernel_matrix.cholesky[latent_index], True),
-                self.gaussian_mixture.mean_prod_sum_covar(i, latent_index).T).T)))
+                self.gaussian_mixture.mean_prod_sum_covar(i, latent_index, self.GP_mean[latent_index]).T).T)))
 
         return grad
 
@@ -1211,7 +1211,7 @@ class GaussianProcess(object):
         """
         repeated_means = np.repeat(
             self.gaussian_mixture.means[component_index, latent_index][:, np.newaxis],
-            input_partition.shape[0], axis=1)
+            input_partition.shape[0], axis=1) - self.GP_mean[latent_index]
         return self._grad_kernel_product_over_hyper_params(latent_index, input_partition,
                                                            kernel_products, repeated_means)
 
@@ -1452,12 +1452,17 @@ class GaussianProcess(object):
         for i in xrange(self.num_latent):
             kern_dot_covar_dot_kern = self.gaussian_mixture.a_dot_covar_dot_a(kernel_products[i],
                                                                               component_index, i)
+
+            # non-zero mean GP prior chang: b = fbar + (m - mubar)
+            m_u = self.gaussian_mixture.means[component_index, i] - self.GP_mean[i]
             normal_samples[i], sample_means[i], sample_vars[i], samples[:, :, i] = (
                 self._theano_get_samples_partition(kernel_products[i],
                                          diag_conditional_covars[i],
                                          kern_dot_covar_dot_kern,
-                                         self.gaussian_mixture.means[component_index, i],
+                                         m_u,
                                          self.num_samples))
+            sample_means[i] =  sample_means[i] + self.GP_mean[i] # non-zero mean GP prior chang: b = fbar + (m - mubar)
+            samples[:, :, i] = samples[:, :, i] + self.GP_mean[i] # non-zero mean GP prior chang: b = fbar + (m - mubar)
         return normal_samples, sample_means, sample_vars, samples
 
     def _compile_get_samples_partition():
