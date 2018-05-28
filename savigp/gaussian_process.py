@@ -116,6 +116,8 @@ class GaussianProcess(object):
                  partition_size=3000):
         train_inputs = train_inputs.astype(np.float32)
         train_outputs = train_outputs.astype(np.float32)
+        self.train_inputs = train_inputs
+        self.train_outputs = train_outputs
 
         # Initialize variables to keep track of various model dimensions.
         self.num_latent = len(kernels)
@@ -194,13 +196,13 @@ class GaussianProcess(object):
     def shuffle_data(self):
         partition_size = self.input_partitions[0].shape[0]
 
-        train_inputs = np.concatenate(self.input_partitions)
-        train_outputs = np.concatenate(self.output_partitions)
-        np.random.permutation(train_inputs)
-        np.random.permutation(train_outputs)
+        rng_state = np.random.get_state()
+        np.random.shuffle(self.train_inputs)
+        np.random.set_state(rng_state)
+        np.random.shuffle(self.train_outputs)
 
-        self.input_partitions = self._partition_data(partition_size, train_inputs)
-        self.output_partitions = self._partition_data(partition_size, train_outputs)
+        self.input_partitions = self._partition_data(partition_size, self.train_inputs)
+        self.output_partitions = self._partition_data(partition_size, self.train_outputs)
 
     def set_params(self, new_params):
         """

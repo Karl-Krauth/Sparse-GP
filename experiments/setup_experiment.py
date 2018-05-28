@@ -295,7 +295,7 @@ def mnist_experiment(method, components, sparsity_factor, run_id,
 
 def mnist8m_experiment(method, components, sparsity_factor, run_id,
                        image=None, n_threads=1, partition_size=3000,
-                       optimize_stochastic=True, num_samples=100,
+                       optimize_stochastic=True, num_samples=1000,
                        max_iter=8000):
     """
     Run the mnist8m experiment.
@@ -331,7 +331,7 @@ def mnist8m_experiment(method, components, sparsity_factor, run_id,
                                transform,
                                False,
                                False,
-                               optimization_config={'mog': 60, 'hyp': 15},
+                               optimization_config={'mog': 60, 'hyp': 15, 'inducing': 6},
                                num_samples=num_samples,
                                max_iter=max_iter,
                                n_threads=n_threads,

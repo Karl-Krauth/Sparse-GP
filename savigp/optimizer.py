@@ -187,7 +187,7 @@ def stochastic_optimize_model(model, optimization_config, max_iterations=200, mo
     checker = ConvergenceChecker(mog_threshold, objective_threshold)
 
     try:
-        while (not checker.is_converged() and
+        while (# not checker.is_converged() and
                (max_iterations is None or current_iter < max_iterations)):
             model_logging.logger.info('Iteration %d started.', current_iter)
             model.shuffle_data()
@@ -202,21 +202,21 @@ def stochastic_optimize_model(model, optimization_config, max_iterations=200, mo
                     i += 1
 
             # Update and save the state of the optimization.
-            model_logging.snapshot_model(model)
-            checker.update_parameters(model.overall_objective_function(),
-                                      *model.get_gaussian_mixture_params())
+            # model_logging.snapshot_model(model)
+            # checker.update_parameters(model.overall_objective_function(),
+            #                           *model.get_gaussian_mixture_params())
             current_iter += 1
     except KeyboardInterrupt:
         model_logging.logger.info('Interrupted by the user.')
         model_logging.logger.info('Last objective value: %f', model.overall_objective_function())
 
     end = time.time()
-
-    return (end - start), total_evaluations
-
-
+    return (end - start), total_evaluations 
 grad_rms = [0] * 10
 change_rms = [0] * 10
+m_t = [0] * 10
+v_t = [0] * 10
+t = [0] * 10
 def sgd(model, num_batches, max_passes, idx):
     """
     Optimise the model using mini-batch stochastic gradient descent.
@@ -235,22 +235,36 @@ def sgd(model, num_batches, max_passes, idx):
     global grad_rms
     global change_rms
     global iternum
-    eps = 1e-6
-    decay_rate = 0.95
+    global m_t
+    global v_t
+    global t
+    # eps = 1e-6
+    # decay_rate = 0.95
+    alpha = 0.01
+    beta_1 = 0.9
+    beta_2 = 0.999                      #initialize the values of the parameters
+    epsilon = 1e-8
 
     model.set_train_partitions(curr_train_index, num_batches)
     model.set_params(model.get_params())
 
     for i in xrange(max_passes):
-        model.shuffle_data()
-        for j in xrange(model.get_num_partitions() / num_batches):
+        # model.shuffle_data()
+        for j in xrange(model.get_num_partitions() * 60000 / (8000000 * num_batches)):
+            t[idx] += 1
             old_params = model.get_params()
-            grad_rms[idx] = (decay_rate * grad_rms[idx] + (1 - decay_rate) *
-                             model.objective_function_gradients() ** 2)
-            change = -(np.sqrt(change_rms[idx] + eps) / np.sqrt(grad_rms[idx] + eps) *
-                       model.objective_function_gradients())
-            change_rms[idx] = decay_rate * change_rms[idx] + (1 - decay_rate) * change ** 2
-            new_params = old_params + change
+            g_t = model.objective_function_gradients()
+            m_t[idx]= beta_1*m_t[idx] + (1-beta_1)*g_t   #updates the moving averages of the gradient
+            v_t[idx] = beta_2*v_t[idx] + (1-beta_2)*(g_t*g_t) #updates the moving averages of the squared gradient
+            m_cap = m_t[idx]/(1-(beta_1**t[idx]))     #calculates the bias-corrected estimates
+            v_cap = v_t[idx]/(1-(beta_2**t[idx]))     #calculates the bias-corrected estimates
+            new_params = old_params - (alpha*m_cap)/(np.sqrt(v_cap)+epsilon) #updates the parameters
+            # grad_rms[idx] = (decay_rate * grad_rms[idx] + (1 - decay_rate) *
+            #                  model.objective_function_gradients() ** 2)
+            # change = -(np.sqrt(change_rms[idx] + eps) / np.sqrt(grad_rms[idx] + eps) *
+            #            model.objective_function_gradients())
+            # change_rms[idx] = decay_rate * change_rms[idx] + (1 - decay_rate) * change ** 2
+            # new_params = old_params + change
 
             curr_train_index += num_batches
             if curr_train_index == model.get_num_partitions():
