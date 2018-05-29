@@ -18,11 +18,15 @@ class DiagonalGaussianMixture(gaussian_mixture.GaussianMixture):
      invC_klj_Sk : ndarray
       (s[k,j] + s[l,j])^-1 * s[k,j]
     """
-    def __init__(self, num_components, num_latent, initial_mean):
+    def __init__(self, num_components, num_latent, initial_mean, init_var=None):
         gaussian_mixture.GaussianMixture.__init__(self, num_components, num_latent, initial_mean)
         self.invC_klj_Sk = np.empty((self.num_components, self.num_components, self.num_latent, self.num_dim), dtype=np.float32)
-        self.covars = np.random.uniform(low=0.5, high=0.5, size=(self.num_components, self.num_latent, self.num_dim)).astype(np.float32)
-        self.log_s = np.log(self.covars)
+        if init_var is not None:
+            self.covars = np.tile(init_var, [self.num_components, 1, self.num_dim])
+            self.log_s = np.log(self.covars)
+        else:
+            self.covars = np.random.uniform(low=0.5, high=0.5, size=(self.num_components, self.num_latent, self.num_dim)).astype(np.float32)
+            self.log_s = np.log(self.covars)
         self._update()
 
     def get_params(self):

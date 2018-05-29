@@ -15,16 +15,16 @@ class DiagonalGaussianProcess(gaussian_process.GaussianProcess):
 
     def __init__(self, train_inputs, train_outputs, num_inducing, num_components, num_samples, kernels,
                  likelihood, latent_noise=0, exact_ell=False, inducing_on_inputs=False,
-                 num_threads=1, partition_size=3000, GP_mean=None):
+                 num_threads=1, partition_size=3000, GP_mean=None, init_var=None):
         super(DiagonalGaussianProcess, self).__init__(
                                                       train_inputs, train_outputs, num_inducing,
                                                       num_components, num_samples, kernels, likelihood,
                                                       latent_noise, exact_ell, inducing_on_inputs,
-                                                      num_threads, partition_size, GP_mean=GP_mean)
+                                                      num_threads, partition_size, GP_mean=GP_mean, init_var=init_var)
 
     def _get_gaussian_mixture(self, initial_mean):
         return diagonal_gaussian_mixture.DiagonalGaussianMixture(
-            self.num_components, self.num_latent, initial_mean)
+            self.num_components, self.num_latent, initial_mean, init_var=None)
 
     def _grad_ell_over_covars(self, component_index, conditional_ll, kernel_products, sample_vars, normal_samples):
         grad = np.empty([self.num_latent] + self.gaussian_mixture.get_covar_shape())

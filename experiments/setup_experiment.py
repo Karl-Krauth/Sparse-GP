@@ -649,6 +649,7 @@ def seismic_experiment(method, components, sparsity_factor, run_id,
                                n_threads=n_threads,
                                model_image_dir=image,
                                GP_mean= prior_mu,
+                               init_var = None,
                                num_samples=100000,
                                )
 

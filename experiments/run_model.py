@@ -36,7 +36,8 @@ def run_model(train_inputs,
               ftol=1e-5,
               partition_size=3000,
               optimize_stochastic=False,
-              GP_mean=None
+              GP_mean=None,
+              init_var = None
               ):
     """
     Fit a model to the data (train_X, train_Y) using the method provided by 'method', and make
@@ -156,7 +157,8 @@ def run_model(train_inputs,
                                     random_Z,
                                     num_threads=n_threads,
                                     partition_size=partition_size,
-                                    GP_mean=GP_mean
+                                    GP_mean=GP_mean,
+                                    init_var=init_var
                                     )
     elif method == 'diag':
         model = DiagonalGaussianProcess(train_inputs,
@@ -171,7 +173,8 @@ def run_model(train_inputs,
                                         random_Z,
                                         num_threads=n_threads,
                                         partition_size=partition_size,
-                                        GP_mean=GP_mean
+                                        GP_mean=GP_mean,
+                                        init_var=init_var
                                         )
     else:
         assert False

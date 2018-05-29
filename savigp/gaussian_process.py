@@ -114,7 +114,8 @@ class GaussianProcess(object):
                  inducing_on_inputs=False,
                  num_threads=1,
                  partition_size=3000,
-                 GP_mean = None
+                 GP_mean=None,
+                 init_var=None
                  ):
         train_inputs = train_inputs.astype(np.float32)
         train_outputs = train_outputs.astype(np.float32)
@@ -153,7 +154,7 @@ class GaussianProcess(object):
         # Initialize the parameters to optimize.
         self.inducing_locations, initial_mean = (
             self._initialize_inducing_points(train_inputs, train_outputs, inducing_on_inputs))
-        self.gaussian_mixture = self._get_gaussian_mixture(initial_mean)
+        self.gaussian_mixture = self._get_gaussian_mixture(initial_mean, init_var)
         self.hyper_params = np.array([self.kernels[i].param_array.copy()
                                       for i in xrange(self.num_latent)], dtype=np.float32)
 

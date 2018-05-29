@@ -23,11 +23,15 @@ class FullGaussianMixture(gaussian_mixture.GaussianMixture):
     initial_mean : ndarray
         The initial mean of the gaussian mixture. Dimensions: 1 * num_latent * num_dim.
     """
-    def __init__(self, num_latent, initial_mean):
+    def __init__(self, num_latent, initial_mean, init_var):
         super(FullGaussianMixture, self).__init__(1, num_latent, initial_mean)
         self.covars_cholesky = np.tile(np.eye(self.num_dim, dtype=np.float32),
                                        [self.num_latent, 1, 1])
-        self.covars = self.covars_cholesky.copy()
+        if init_var is not None:
+            self.covars_cholesky = np.sqrt(init_var[:, np.newaxis, np.newaxis]) * self.covars_cholesky
+            self.covars = init_var[:, np.newaxis, np.newaxis] * self.covars_cholesky
+        else:
+            self.covars = self.covars_cholesky.copy()
 
     def get_params(self):
         return np.hstack([self.means.flatten(), self._get_raw_covars(),

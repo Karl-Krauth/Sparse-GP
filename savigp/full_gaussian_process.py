@@ -26,7 +26,8 @@ class FullGaussianProcess(gaussian_process.GaussianProcess):
                  inducing_on_inputs=False,
                  num_threads=1,
                  partition_size=3000,
-                 GP_mean=None
+                 GP_mean=None,
+                 init_var=None
                  ):
         super(FullGaussianProcess, self).__init__(train_inputs=train_inputs,
                                                   train_outputs=train_outputs,
@@ -40,11 +41,12 @@ class FullGaussianProcess(gaussian_process.GaussianProcess):
                                                   inducing_on_inputs=inducing_on_inputs,
                                                   num_threads=num_threads,
                                                   partition_size=partition_size,
-                                                  GP_mean=GP_mean
+                                                  GP_mean=GP_mean,
+                                                  init_var=init_var
                                                   )
 
-    def _get_gaussian_mixture(self, initial_mean):
-        return full_gaussian_mixture.FullGaussianMixture(self.num_latent, initial_mean)
+    def _get_gaussian_mixture(self, initial_mean, init_var=None):
+        return full_gaussian_mixture.FullGaussianMixture(self.num_latent, initial_mean, init_var)
 
     def _grad_cross_over_covars(self):
             grad = np.empty([self.num_components, self.num_latent,
