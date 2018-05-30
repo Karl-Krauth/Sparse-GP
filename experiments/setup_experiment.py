@@ -648,10 +648,11 @@ def seismic_experiment(method, components, sparsity_factor, run_id,
                                ftol=1,
                                n_threads=n_threads,
                                model_image_dir=image,
-                               GP_mean= prior_mu,
-                               init_var = None,
+                               GP_mean=prior_mu,
+                               #init_var=prior_var,
                                num_samples=100000,
                                )
+
 
 if __name__ == '__main__':
     seismic_experiment('full', 1, 1.0, 1, None)

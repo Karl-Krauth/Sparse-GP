@@ -121,13 +121,13 @@ class GaussianProcess(object):
         train_outputs = train_outputs.astype(np.float32)
 
         # mean for Gaussian Processes
+        self.num_latent = len(kernels)
         if GP_mean is None:
             self.GP_mean = np.zeros(self.num_latent)
         else:
             self.GP_mean = GP_mean
 
         # Initialize variables to keep track of various model dimensions.
-        self.num_latent = len(kernels)
         self.num_components = num_components
         self.num_inducing = num_inducing
         self.num_samples = num_samples
@@ -1024,8 +1024,9 @@ class GaussianProcess(object):
         """
         grad = np.empty([self.num_latent, self.num_inducing], dtype=np.float32)
         for i in xrange(self.num_latent):
-            mean = util.weighted_average(conditional_ll, normal_samples[i] /
-                                         np.sqrt(sample_vars[i]), self.num_samples)
+            # mean = util.weighted_average(conditional_ll, normal_samples[i] / np.sqrt(sample_vars[i]), self.num_samples)
+            mean = util.average_ctrl_variates(conditional_ll, normal_samples[i] / sample_vars[i], self.num_samples)
+
             # TODO(karl): Figure out why we need a double mdot here.
             grad[i] = (self.gaussian_mixture.weights[component_index] *
                        scipy.linalg.cho_solve((self.kernel_matrix.cholesky[i], True),
@@ -1113,7 +1114,7 @@ class GaussianProcess(object):
                        grad_vars[:, j] - 2.0 * normal_samples[i] / np.sqrt(sample_vars[i]) *
                        grad_means[:, j] - np.square(normal_samples[i]) / sample_vars[i] *
                        grad_vars[:, j])
-                mean = util.weighted_average(conditional_ll, val, self.num_samples)
+                mean = util.average_ctrl_variates(conditional_ll, val, self.num_samples)
                 hyper_params_grad[i, j] = (
                     -1.0 / 2 * self.gaussian_mixture.weights[component_index] * mean.sum())
 

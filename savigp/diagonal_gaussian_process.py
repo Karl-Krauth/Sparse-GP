@@ -1,6 +1,6 @@
 from GPy.util.linalg import mdot
 from scipy.misc import logsumexp
-from util import weighted_average, log_diag_gaussian
+from util import average_ctrl_variates, log_diag_gaussian
 import numpy as np
 
 
@@ -29,7 +29,7 @@ class DiagonalGaussianProcess(gaussian_process.GaussianProcess):
     def _grad_ell_over_covars(self, component_index, conditional_ll, kernel_products, sample_vars, normal_samples):
         grad = np.empty([self.num_latent] + self.gaussian_mixture.get_covar_shape())
         for i in xrange(self.num_latent):
-            s = weighted_average(conditional_ll, (np.square(normal_samples[i]) - 1) / sample_vars[i], self.num_samples)
+            s = average_ctrl_variates(conditional_ll, (np.square(normal_samples[i]) - 1) / sample_vars[i], self.num_samples)
             grad[i] = (mdot(s, np.square(kernel_products[i])) * self.gaussian_mixture.weights[component_index] / 2.)
         return grad
 

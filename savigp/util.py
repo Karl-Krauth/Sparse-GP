@@ -34,33 +34,33 @@ class PosDefMatrix(object):
         self.is_outdated = True
 
 
-def weighted_average(weights, points, num_samples):
+def average_ctrl_variates(val, h, num_samples):
     """
-    calculates (condll * X).mean(axis=1) using variance reduction method.
+    Estimates (h * val).mean(axis=1) using the variance reduction method of control variates.
 
     number of control variables = number of samples / 10
 
     Parameters
     ----------
-    condll : ndarray
+    val : Values such as samples of log conditional  likelihoods
         dimensions: s * N
-    X : ndarray
+    h : control variate: such that Expectation[h] = 0
         dimensions: s * N
 
     Returns
     -------
     :returns: a matrix of dimension N
     """
-    points = points.T
-    weights = weights.T
+    h = h.T
+    val = val.T
     cvsamples = num_samples / 10
-    pz = points[:, 0:cvsamples]
-    py = np.multiply(weights[:, 0:cvsamples], pz)
-    above = np.multiply((py.T - py.mean(1)), pz.T).sum(axis=0) / (cvsamples - 1)
-    below = np.square(pz).sum(axis=1) / (cvsamples - 1)
-    cvopt = np.divide(above, below)
-    cvopt = np.nan_to_num(cvopt)
-    grads = np.multiply(weights, points) - np.multiply(cvopt, points.T).T
+    h_samples = h[:, 0:cvsamples]
+    g = np.multiply(val[:, 0:cvsamples], h_samples) # g = h _samples * val_samples
+    cov_g_h = np.multiply((g.T - g.mean(1)), h_samples.T).sum(axis=0) / (cvsamples - 1) # cov(g,h)
+    var_h = np.square(h_samples).sum(axis=1) / (cvsamples - 1) # var(h)
+    a_hat = np.divide(cov_g_h, var_h) # Optimal control variate coefficient
+    a_hat = np.nan_to_num(a_hat)
+    grads = np.multiply(val, h) - np.multiply(a_hat, h.T).T
 
     return grads.mean(axis=1)
 
