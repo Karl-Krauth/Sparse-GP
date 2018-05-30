@@ -56,8 +56,9 @@ def average_ctrl_variates(val, h, num_samples):
     cvsamples = num_samples / 10
     h_samples = h[:, 0:cvsamples]
     g = np.multiply(val[:, 0:cvsamples], h_samples) # g = h _samples * val_samples
-    cov_g_h = np.multiply((g.T - g.mean(1)), h_samples.T).sum(axis=0) / (cvsamples - 1) # cov(g,h)
-    var_h = np.square(h_samples).sum(axis=1) / (cvsamples - 1) # var(h)
+    mean_h = h_samples.mean(1) # it is supossed to be zero but better to eliminate the offset here
+    var_h = np.square(h_samples.T - mean_h).sum(axis=0) / (cvsamples - 1) # var(h)
+    cov_g_h = np.multiply((g.T - g.mean(1)), (h_samples.T - mean_h)).sum(axis=0) / (cvsamples - 1) # cov(g,h)
     a_hat = np.divide(cov_g_h, var_h) # Optimal control variate coefficient
     a_hat = np.nan_to_num(a_hat)
     grads = np.multiply(val, h) - np.multiply(a_hat, h.T).T
