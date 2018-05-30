@@ -64,9 +64,7 @@ class FullGaussianProcess(gaussian_process.GaussianProcess):
         grad = np.empty([self.num_latent] + self.gaussian_mixture.get_covar_shape(),
                         dtype=np.float32)
         for i in xrange(self.num_latent):
-            # average = util.weighted_average(conditional_ll, (normal_samples[i] ** 2 - 1) / sample_vars[i], self.num_samples)
-            average = util.average_ctrl_variates(
-                conditional_ll, ((normal_samples[i]/sample_vars[i]) ** 2 - 1.0/sample_vars[i]), self.num_samples)
+            average = util.average_ctrl_variates(conditional_ll, (normal_samples[i] ** 2 - 1) / sample_vars[i], self.num_samples)
             grad[i] = self._theano_grad_ell_over_covars(kernel_products[i], average)
 
         return grad

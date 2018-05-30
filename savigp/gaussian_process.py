@@ -1024,8 +1024,7 @@ class GaussianProcess(object):
         """
         grad = np.empty([self.num_latent, self.num_inducing], dtype=np.float32)
         for i in xrange(self.num_latent):
-            # mean = util.weighted_average(conditional_ll, normal_samples[i] / np.sqrt(sample_vars[i]), self.num_samples)
-            mean = util.average_ctrl_variates(conditional_ll, normal_samples[i] / sample_vars[i], self.num_samples)
+            mean = util.average_ctrl_variates(conditional_ll, normal_samples[i] / np.sqrt(sample_vars[i]), self.num_samples)
 
             # TODO(karl): Figure out why we need a double mdot here.
             grad[i] = (self.gaussian_mixture.weights[component_index] *
