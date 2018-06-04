@@ -51,7 +51,7 @@ from theano.sandbox import rng_mrg
 import util
 
 # A list of possible sets of parameters ordered according to optimization ordering.
-PARAMETER_SETS = ['hyp', 'mog', 'hyp', 'll', 'inducing']
+PARAMETER_SETS = ['hyp', 'mog', 'hyp', 'll', 'inducing', 'mog_hyp']
 
 
 class GaussianProcess(object):
@@ -236,6 +236,15 @@ class GaussianProcess(object):
             self.inducing_locations = new_params.reshape([
                 self.num_latent, self.num_inducing, self.input_dim])
             self.kernel_matrix.set_outdated()
+        elif self.optimization_method == 'mog_hyp':
+            L = self.gaussian_mixture.get_params().size
+            self.gaussian_mixture.set_params(new_params[:L])
+            self.hyper_params = np.exp(new_params[L:].reshape([self.num_latent,
+                                                              self.num_hyper_params]))
+            for i in xrange(self.num_latent):
+                self.kernels[i].param_array[:] = self.hyper_params[i].copy()
+            self._update_latent_kernel()
+
 
         self._update_log_likelihood()
 
@@ -257,6 +266,9 @@ class GaussianProcess(object):
             return self.likelihood.get_params()
         elif self.optimization_method == 'inducing':
             return self.inducing_locations.flatten()
+        elif self.optimization_method == 'mog_hyp':
+            return np.hstack([self.gaussian_mixture.get_params(),
+                             np.log(self.hyper_params.flatten())])
 
     def get_gaussian_mixture_params(self):
         """
@@ -496,6 +508,71 @@ class GaussianProcess(object):
 
         return inducing_locations, initial_mean
 
+    def _update_log_likelihood_mog(self, grad_cross_over_weights, num_batches):
+        """
+        Updates objective when mog change
+        :return:
+        """
+        self.cached_ell, grad_ell_over_means, grad_ell_over_covars, grad_ell_over_weights = (
+        self._apply_over_data(self._gaussian_mixture_ell))
+        means_grad = (
+                        (self._grad_entropy_over_means() + self._grad_cross_over_means()) / num_batches +
+                        grad_ell_over_means)
+        covars_grad = (
+                        (self._grad_entropy_over_covars() + self._grad_cross_over_covars()) / num_batches +
+                        self.gaussian_mixture.transform_covars_grad(grad_ell_over_covars))
+        weights_grad = (
+                        (self._grad_entropy_over_weights() + grad_cross_over_weights) / num_batches +
+                        grad_ell_over_weights)
+        self.curr_log_likelihood_gradients = np.hstack([
+                        means_grad.flatten(), covars_grad,
+                        self.gaussian_mixture.transform_weights_grad(weights_grad)])
+
+    def _update_log_likelihood_hyp(self, num_batches):
+        """
+        Updates objective when hyp change
+        :return:
+        """
+        self.cached_ell, grad_ell_over_hyper_params = self._apply_over_data(
+            self._hyper_params_ell)
+        for i in xrange(self.num_latent):
+            self.hyper_params[i] = self.kernels[i].param_array.copy()
+        grad_hyper = (
+                self._grad_cross_over_hyper_params() / num_batches + grad_ell_over_hyper_params)
+        self.curr_log_likelihood_gradients = grad_hyper.flatten() * self.hyper_params.flatten()
+
+    def _update_log_likelihood_mog_hyp(self, grad_cross_over_weights, num_batches):
+        """
+          Updates objective when mog and hyp change
+          :return:
+          """
+        # grad mog
+        self.cached_ell, grad_ell_over_means, grad_ell_over_covars, grad_ell_over_weights = (
+        self._apply_over_data(self._gaussian_mixture_ell))
+        means_grad = (
+                        (self._grad_entropy_over_means() + self._grad_cross_over_means()) / num_batches +
+                        grad_ell_over_means)
+        covars_grad = (
+                        (self._grad_entropy_over_covars() + self._grad_cross_over_covars()) / num_batches +
+                        self.gaussian_mixture.transform_covars_grad(grad_ell_over_covars))
+        weights_grad = (
+                        (self._grad_entropy_over_weights() + grad_cross_over_weights) / num_batches +
+                        grad_ell_over_weights)
+        grad_mog = np.hstack([
+                        means_grad.flatten(), covars_grad,
+                        self.gaussian_mixture.transform_weights_grad(weights_grad)])
+
+        # grad hyp
+        self.cached_ell, grad_ell_over_hyper_params = self._apply_over_data(
+            self._hyper_params_ell)
+        for i in xrange(self.num_latent):
+            self.hyper_params[i] = self.kernels[i].param_array.copy()
+        grad_hyp_mat = (
+                self._grad_cross_over_hyper_params() / num_batches + grad_ell_over_hyper_params)
+        grad_hyp = grad_hyp_mat.flatten() * self.hyper_params.flatten()
+        self.curr_log_likelihood_gradients = np.hstack([grad_mog, grad_hyp])
+
+
     def _update_log_likelihood(self):
         """
         Updates objective function and its gradients under current configuration and stores them in
@@ -512,36 +589,24 @@ class GaussianProcess(object):
 
         # Update the objective gradients and the ell component.
         if self.optimization_method == 'mog':
-            self.cached_ell, grad_ell_over_means, grad_ell_over_covars, grad_ell_over_weights = (
-                self._apply_over_data(self._gaussian_mixture_ell))
-            means_grad = (
-                (self._grad_entropy_over_means() + self._grad_cross_over_means()) / num_batches +
-                grad_ell_over_means)
-            covars_grad = (
-                (self._grad_entropy_over_covars() + self._grad_cross_over_covars()) / num_batches +
-                self.gaussian_mixture.transform_covars_grad(grad_ell_over_covars))
-            weights_grad = (
-                (self._grad_entropy_over_weights() + grad_cross_over_weights) / num_batches +
-                grad_ell_over_weights)
-            self.curr_log_likelihood_gradients = np.hstack([
-                means_grad.flatten(), covars_grad,
-                self.gaussian_mixture.transform_weights_grad(weights_grad)])
+            self._update_log_likelihood_mog(grad_cross_over_weights, num_batches)
+
         elif self.optimization_method == 'hyp':
-            self.cached_ell, grad_ell_over_hyper_params = self._apply_over_data(
-                self._hyper_params_ell)
-            for i in xrange(self.num_latent):
-                self.hyper_params[i] = self.kernels[i].param_array.copy()
-            grad_hyper = (
-                self._grad_cross_over_hyper_params() / num_batches + grad_ell_over_hyper_params)
-            self.curr_log_likelihood_gradients = grad_hyper.flatten() * self.hyper_params.flatten()
+            self._update_log_likelihood_hyp(num_batches)
+
         elif self.optimization_method == 'll':
             self.cached_ell, grad_ell_over_likelihood_params = self._apply_over_data(
                 self._likelihood_params_ell)
             self.curr_log_likelihood_gradients = grad_ell_over_likelihood_params
+
         elif self.optimization_method == 'inducing':
             self.cached_ell, grad_ell_over_inducing = self._apply_over_data(self._inducing_ell)
             grad_inducing = self._grad_cross_over_inducing() / num_batches + grad_ell_over_inducing
             self.curr_log_likelihood_gradients = grad_inducing.flatten()
+
+        elif self.optimization_method == 'mog_hyp':
+            self._update_log_likelihood_mog_hyp(grad_cross_over_weights, num_batches)
+
 
     def _update_latent_kernel(self):
         """Update kernels by adding latent noise to all of them."""
