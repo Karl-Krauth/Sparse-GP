@@ -626,8 +626,8 @@ def seismic_experiment(method, components, sparsity_factor, run_id,
 
     cond_ll = likelihood.SeismicLL(4, sigma2y)
 
-    # transform = data_transformation.IdentityTransformation(data['train_inputs'], data['train_outputs'])
-    transform = data_transformation.MeanStdXTransformation(data['train_inputs'], data['train_outputs'])
+    transform = data_transformation.IdentityTransformation(data['train_inputs'], data['train_outputs'])
+    #transform = data_transformation.MeanStdXTransformation(data['train_inputs'], data['train_outputs'])
 
     return run_model.run_model(data['train_inputs'],
                                data['train_outputs'],

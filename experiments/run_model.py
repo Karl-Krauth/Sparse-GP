@@ -135,7 +135,8 @@ def run_model(train_inputs,
         'random_Z': random_Z,
         'latent_noise:': latent_noise,
         'model_init': model_image_dir,
-        'optimize_stochastic': optimize_stochastic
+        'optimize_stochastic': optimize_stochastic,
+        'transformer': transformer.__class__.__name__,
     }
     model_logging.init_logger(name)
     model_logging.logger.info('experiment started for:' + str(properties))
