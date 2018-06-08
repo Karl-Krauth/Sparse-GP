@@ -587,7 +587,8 @@ class SeismicLL(Likelihood):
         for p in range(1, self.P):
             G[:, :, p] = G[:, :, p-1] + 2 * (depth[:, :, p] - depth[:, :, p - 1]) / vel[:, :, p]
 
-        return ((- (0.5 * ((G - Y) ** 2) / self.sigma2y) -0.5 * np.log(2 * np.pi) - 0.5 * np.log(self.sigma2y))).sum(axis=2), None
+        return (- (0.5 * ((G - Y) ** 2) / self.sigma2y) - 0.5 * np.log(2 * np.pi)
+                - 0.5 * np.log(self.sigma2y)).sum(axis=2), None
 
     def get_params(self):
         return np.array(np.log([self.sigma]))
