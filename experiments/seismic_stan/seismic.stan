@@ -1,21 +1,29 @@
-// Sample from multidimensional Gaussian process using Stan's built-in
-// exponentiated quadratic covariance matrix function.
-// Fixed kernel hyperparameters: rho=1, alpha=1, sigma=sqrt(0.1)
-
 data {
-  int<lower=1> N;
-  int<lower=1> D;
-  vector[D] x[N];
+    int<lower=1> N;
+    int<lower=1> D;
+    int<lower=1> N_latent;
+    real x[N];
+    vector[N] y[D];
+    vector[N_latent] mu_prior;
+    vector[N_latent] var_prior;
 }
+
 transformed data {
-  matrix[N, N] K = cov_exp_quad(x, 1.0, 1.0);
-  vector[N] mu = rep_vector(0, N);
-  for (n in 1:N)
-    K[n, n] = K[n, n] + 0.1;
 }
 parameters {
-  vector[N] y;
+    vector[N] f[N_latent];
 }
+
 model {
-  y ~ multi_normal(mu, K);
+    matrix[N, N] K[N_latent];
+    vector[N] mu[N_latent];
+    for (k in 1:N_latent){
+        K[k] = cov_exp_quad(x, var_prior[k], 1.0) + diag_matrix(rep_vector(1e-5, N));
+        mu[k] = rep_vector(mu_prior[k], N);
+        f[k] ~ multi_normal(mu[k], K[k]);
+    };
+    
+    for (k in 1:4){
+        y[k] ~ normal(f[k], rep_vector(0.01, N));
+    };
 }
