@@ -20,8 +20,8 @@ class DiagonalGaussianMixture(gaussian_mixture.GaussianMixture):
     """
     def __init__(self, num_components, num_latent, initial_mean):
         gaussian_mixture.GaussianMixture.__init__(self, num_components, num_latent, initial_mean)
-        self.invC_klj_Sk = np.empty((self.num_components, self.num_components, self.num_latent, self.num_dim), dtype=np.float32)
-        self.covars = np.random.uniform(low=0.5, high=0.5, size=(self.num_components, self.num_latent, self.num_dim)).astype(np.float32)
+        self.invC_klj_Sk = np.empty((self.num_components, self.num_components, self.num_latent, self.num_dim), dtype=util.PRECISION)
+        self.covars = np.random.uniform(low=0.5, high=0.5, size=(self.num_components, self.num_latent, self.num_dim)).astype(util.PRECISION)
         self.log_s = np.log(self.covars)
         self._update()
 

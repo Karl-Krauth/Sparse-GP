@@ -11,8 +11,7 @@ from scipy.special import erfinv
 from scipy.special import gammaln
 import numpy as np
 
-import theano
-from theano import tensor
+import util
 from util import cross_ent_normal
 
 
@@ -332,16 +331,14 @@ class SoftmaxLL(Likelihood):
             .reshape((self.dim, self.n_samples))
 
     def ll_F_Y(self, F, Y):
-        return self._theano_ll_F_Y(F, Y), None
+        return self._torch_ll_F_Y(F, Y), None
 
-    def _compile_ll_F_Y():
-        F = tensor.tensor3('F')
-        Y = tensor.matrix('Y')
-        inner_val = F - tensor.sum(F * Y, 2)[:, :, np.newaxis]
-        max_val = tensor.max(inner_val, 2)
-        result = -(tensor.log(tensor.sum(tensor.exp(inner_val - max_val[:, :, np.newaxis]), 2)) + max_val)
-        return theano.function([F, Y], result, allow_input_downcast=True)
-    _theano_ll_F_Y = _compile_ll_F_Y()
+    @util.torchify
+    def _torch_ll_F_Y(self, F, Y):
+        inner_val = F - torch.sum(F * Y, dim=2)[:, :, np.newaxis]
+        max_val = torch.max(inner_val, dim=2)
+        result = -(torch.log(torch.sum(torch.exp(inner_val - max_val[:, :, np.newaxis]), dim=2)) + max_val)
+        return result
 
     def predict(self, mu, sigma, Ys, model=None):
         F = np.empty((self.n_samples, mu.shape[0], self.dim))
@@ -508,16 +505,13 @@ class CogLL(Likelihood):
         W = F[:, :, :self.P * self.Q].reshape(F.shape[0], F.shape[1], self.P, self.Q)
         f = F[:, :, self.P * self.Q:]
         Wf = np.einsum('ijlk,ijk->ijl', W, f)
-        c = self._theano_ll_F_Y(Y, Wf, self.sigma_inv)
+        c = self._torch_ll_F_Y(Y, Wf, self.sigma_inv)
         return (self.const  -c), (self.const_grad * self.sigma_y + c)
 
-    def _compile_ll_F_Y():
-        Y = tensor.matrix('Y')
-        Wf = tensor.tensor3('Wf')
-        sigma_inv = tensor.matrix('sigma_inv')
-        c = 1.0 / 2 * (theano.dot((Y - Wf), sigma_inv) * (Y - Wf)).sum(axis=2)
-        return theano.function([Y, Wf, sigma_inv], c)
-    _theano_ll_F_Y = _compile_ll_F_Y()
+    @util.torchify
+    def _torch_ll_F_Y(self, Y, Wf, sigma_inv):
+        c = 1.0 / 2 * ((Y - Wf).mm(sigma_inv) * (Y - Wf)).sum(dim=2)
+        return c
 
     def get_params(self):
         return np.array([np.log(self.sigma_y)])
@@ -537,7 +531,7 @@ class CogLL(Likelihood):
     def set_params(self, p):
         self.sigma_y = math.exp(p[0])
         self.sigma = self.sigma_y * np.eye(self.P)
-        self.sigma_inv = inv(self.sigma).astype(np.float32)
+        self.sigma_inv = inv(self.sigma).astype(util.PRECISION)
         self.const = -1.0 / 2 * np.log(det(self.sigma)) - float(len(self.sigma)) / 2 * np.log(2 * math.pi)
         self.const_grad = -float(self.P) / 2. / self.sigma_y
 

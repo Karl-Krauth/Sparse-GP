@@ -2,10 +2,9 @@
 from GPy.util.linalg import mdot
 import numpy as np
 import scipy
+import torch
 
 import gaussian_mixture
-import theano
-from theano import tensor
 import util
 
 
@@ -25,7 +24,7 @@ class FullGaussianMixture(gaussian_mixture.GaussianMixture):
     """
     def __init__(self, num_latent, initial_mean):
         super(FullGaussianMixture, self).__init__(1, num_latent, initial_mean)
-        self.covars_cholesky = np.tile(np.eye(self.num_dim, dtype=np.float32),
+        self.covars_cholesky = np.tile(np.eye(self.num_dim, dtype=util.PRECISION),
                                        [self.num_latent, 1, 1])
         self.covars = self.covars_cholesky.copy()
 
@@ -39,7 +38,7 @@ class FullGaussianMixture(gaussian_mixture.GaussianMixture):
     def set_covars(self, raw_covars):
         raw_covars = raw_covars.reshape([self.num_latent, self.get_covar_size()])
         for j in xrange(self.num_latent):
-            cholesky = np.zeros([self.num_dim, self.num_dim], dtype=np.float32)
+            cholesky = np.zeros([self.num_dim, self.num_dim], dtype=util.PRECISION)
             cholesky[np.tril_indices_from(cholesky)] = raw_covars[j]
             cholesky[np.diag_indices_from(cholesky)] = np.exp(
                 cholesky[np.diag_indices_from(cholesky)])
@@ -50,18 +49,14 @@ class FullGaussianMixture(gaussian_mixture.GaussianMixture):
         log_normal = -0.5 * (self.num_latent * self.num_dim * np.log(2 * np.pi) + np.log(2))
         for i in xrange(self.num_latent):
             log_normal -= 0.5 * util.pddet(self.covars_cholesky[i])
-        return log_normal.astype(np.float32)
+        return log_normal.astype(util.PRECISION)
 
     def a_dot_covar_dot_a(self, a, component_index, latent_index):
-        return self._theano_a_dot_covar_dot_a(a, self.covars[latent_index])
+        return self._torch_a_dot_covar_dot_a(a, self.covars[latent_index])
 
-    def _compile_a_dot_covar_dot_a():
-        a = tensor.matrix('a')
-        covar = tensor.matrix('covar')
-
-        result = tensor.sum(a * tensor.dot(a, covar), 1)
-        return theano.function([a, covar], result)
-    _theano_a_dot_covar_dot_a = _compile_a_dot_covar_dot_a()
+    @util.torchify
+    def _torch_a_dot_covar_dot_a(self, a, covar):
+        return torch.sum(a * (a.mm(covar)), dim=1)
 
     def mean_prod_sum_covar(self, component_index, latent_index):
         assert component_index == 0
@@ -74,8 +69,8 @@ class FullGaussianMixture(gaussian_mixture.GaussianMixture):
         return mdot(self.covars[latent_index], a)
 
     def transform_eye_grad(self):
-        grad = np.empty([self.num_latent, self.get_covar_size()], dtype=np.float32)
-        meye = np.eye(self.num_dim, dtype=np.float32)[np.tril_indices_from(self.covars_cholesky[0])]
+        grad = np.empty([self.num_latent, self.get_covar_size()], dtype=util.PRECISION)
+        meye = np.eye(self.num_dim, dtype=util.PRECISION)[np.tril_indices_from(self.covars_cholesky[0])]
         for j in range(self.num_latent):
             grad[j] = meye
         return grad.flatten()
@@ -100,23 +95,20 @@ class FullGaussianMixture(gaussian_mixture.GaussianMixture):
         return tmp[np.tril_indices_from(self.covars_cholesky[latent_index])]
 
     def transform_covars_grad(self, internal_grad):
-        grad = np.empty((self.num_latent, self.get_covar_size()), dtype=np.float32)
+        grad = np.empty((self.num_latent, self.get_covar_size()), dtype=util.PRECISION)
         for j in range(self.num_latent):
-            tmp = self._theano_transform_covars_grad(internal_grad[0, j],
+            tmp = self._torch_transform_covars_grad(internal_grad[0, j],
                                                      self.covars_cholesky[j])
             tmp[np.diag_indices_from(tmp)] *= self.covars_cholesky[j][np.diag_indices_from(tmp)]
             grad[j] = tmp[np.tril_indices_from(self.covars_cholesky[j])]
         return grad.flatten()
 
-    def _compile_transform_covars_grad():
-        internal_grad = tensor.matrix('internal_grad')
-        covars_cholesky = tensor.matrix('covars_cholesky')
-        result = tensor.dot(internal_grad + internal_grad.T, covars_cholesky)
-        return theano.function([internal_grad, covars_cholesky], result)
-    _theano_transform_covars_grad = _compile_transform_covars_grad()
+    @util.torchify
+    def _torch_transform_covars_grad(self, internal_grad, covars_cholesky):
+        return (internal_grad + internal_grad.t()).mm(covars_cholesky)
 
     def _get_raw_covars(self):
-        flattened_covars = np.empty([self.num_latent, self.get_covar_size()], dtype=np.float32)
+        flattened_covars = np.empty([self.num_latent, self.get_covar_size()], dtype=util.PRECISION)
         for i in xrange(self.num_latent):
             raw_covars = self.covars_cholesky[i].copy()
             raw_covars[np.diag_indices_from(raw_covars)] = np.log(
