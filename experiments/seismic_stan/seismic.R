@@ -1,4 +1,8 @@
 library("rstan")
+
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+
 library("ggplot2")
 
 data = read.csv("../data/seismic/data.csv", header = F)
