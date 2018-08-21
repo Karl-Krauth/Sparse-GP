@@ -1,0 +1,2 @@
+latent_noise:,optimize_stochastic,sparsity_factor,experiment,run_id,ll,max_iter,transformer,sample_num,optimization_config,git_branch,total_evals,total_time,xtol,random_Z,git_hash,method,model_init,ftol
+0.001,False,1.0,seismic,1,SeismicLL,200,MeanStdXTransformation,100000,"{'hyp': 100, 'mog': 100}",seismic-dev,769,8196.74255490303,0.001,False,9077abcd8c2f8fdd8dbff0a31c644433a0c5bb26,full,,1e-05
