@@ -2,7 +2,8 @@ require(reshape2)
 require(RColorBrewer) 
 require(ggplot2)
 
-input_path = "results/var_div1/"
+#input_path = "results/var_div10/"
+input_path = 'results/seismic_21-Aug-2018_16h47m44s_135476/'
 
 aa = read.csv(paste0(input_path, "predictions.csv"))
 x1 =   read.csv(paste0(input_path, "train.csv"))$X_0

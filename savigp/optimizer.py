@@ -136,7 +136,10 @@ class BatchModelWrapper(object):
 
     def objective_function(self, new_params):
         self.update(new_params)
-        model_logging.logger.debug('Objective: %.4f', self._model.objective_function())
+        model_logging.logger.debug('Objective: %.4f; KL: %.4f;  NELL: %.4f', self._model.objective_function(),
+                                   self._model.get_kl_term(),
+                                   self._model.get_ell_term())
+
         return self._model.objective_function().astype(np.float64)
 
     def objective_function_gradients(self, new_params):

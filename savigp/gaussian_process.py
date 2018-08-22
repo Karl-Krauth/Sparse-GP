@@ -316,6 +316,12 @@ class GaussianProcess(object):
         """
         return -(self.cached_entropy + self.cached_cross + self.cached_ell)
 
+    def get_kl_term(self):
+        return -(self.cached_entropy + self.cached_cross)
+
+    def get_ell_term(self):
+        return - self.cached_ell
+
     def objective_function_gradients(self):
         """Gets the current negative log likelihood gradients."""
         return -self.curr_log_likelihood_gradients.copy()
