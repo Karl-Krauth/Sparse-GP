@@ -514,7 +514,7 @@ class GaussianProcess(object):
 
         return inducing_locations, initial_mean
 
-    def _update_log_likelihood_mog(self, grad_cross_over_weights, num_batches):
+    def  _update_log_likelihood_mog(self, grad_cross_over_weights, num_batches):
         """
         Updates objective when mog change
         :return:
@@ -1526,7 +1526,7 @@ class GaussianProcess(object):
             kern_dot_covar_dot_kern = self.gaussian_mixture.a_dot_covar_dot_a(kernel_products[i],
                                                                               component_index, i)
 
-            # non-zero mean GP prior chang: b = fbar + (m - mubar)
+            # non-zero mean GP prior change: b = fbar + A(m - mubar), A = Kxz Kzz^-1
             m_u = self.gaussian_mixture.means[component_index, i] - self.GP_mean[i]
             normal_samples[i], sample_means[i], sample_vars[i], samples[:, :, i] = (
                 self._theano_get_samples_partition(kernel_products[i],
@@ -1534,8 +1534,8 @@ class GaussianProcess(object):
                                          kern_dot_covar_dot_kern,
                                          m_u,
                                          self.num_samples))
-            sample_means[i] =  sample_means[i] + self.GP_mean[i] # non-zero mean GP prior chang: b = fbar + (m - mubar)
-            samples[:, :, i] = samples[:, :, i] + self.GP_mean[i] # non-zero mean GP prior chang: b = fbar + (m - mubar)
+            sample_means[i] =  sample_means[i] + self.GP_mean[i] # non-zero mean GP prior: b = fbar + A(m - mubar)
+            samples[:, :, i] = samples[:, :, i] + self.GP_mean[i] # non-zero mean GP prior: b = fbar + A(m - mubar)
         return normal_samples, sample_means, sample_vars, samples
 
     def _compile_get_samples_partition():
