@@ -1,4 +1,4 @@
-input_path = "results/seismic_21-Aug-2018_16h47m44s_135476/"
+input_path = "results/seismic_23-Aug-2018_14h38m48s_22901/"
 all_data = readLines(paste0(input_path, "seismic.log"))
 require(stringr)
 nelbo = as.numeric(gsub("Objective: ", "", str_extract(all_data, "Objective: ([0-9.]*)")))

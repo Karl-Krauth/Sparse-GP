@@ -603,7 +603,13 @@ class SeismicLL(Likelihood):
         return 2 * self.P
 
     def map_Y_to_f(self, Y):
-        return np.array([200, 500, 1600, 2200, 1950, 2300, 2750, 3650])
+        #return np.array([200, 500, 1600, 2200, 1950, 2300, 2750, 3650])
+        prior_mu = [200, 500, 1600, 2200, 1950, 2300, 2750, 3650]
+        prior_var = np.array([900, 5625, 57600, 108900, 38025, 52900, 75625, 133225])
+
+        val = prior_mu + np.random.normal(0, np.sqrt(prior_var), prior_var.size)
+        return val
+
         # Now considering non-zero mean GP
         # return np.array([0, 0, 0, 0, 0, 0, 0, 0])
 

@@ -305,6 +305,7 @@ class GaussianProcess(object):
         cross = self._calculate_cross(self._grad_cross_over_weights())
         return -((self._calculate_entropy() + cross) + ell)
 
+
     def objective_function(self):
         """
         Get the current negative log likelihood value.
@@ -315,6 +316,8 @@ class GaussianProcess(object):
             The current negative log likelihood value.
         """
         return -(self.cached_entropy + self.cached_cross + self.cached_ell)
+
+
 
     def get_kl_term(self):
         return -(self.cached_entropy + self.cached_cross)
