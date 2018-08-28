@@ -1,0 +1,5 @@
+2018-08-22 11:25:27,104 - seismic - INFO - experiment started for:{'latent_noise:': 0.001, 'optimize_stochastic': False, 'sparsity_factor': 1.0, 'experiment': 'seismic', 'run_id': 1, 'll': 'SeismicLL', 'max_iter': 200, 'transformer': 'MeanStdXTransformation', 'sample_num': 100000, 'optimization_config': {'hyp': 100, 'mog': 100}, 'git_branch': 'seismic-dev', 'xtol': 0.001, 'random_Z': False, 'git_hash': '8443071dc984606c4246a6bbf47c261ffa671199', 'method': 'full', 'model_init': None, 'ftol': 1e-05}
+2018-08-22 11:25:39,427 - seismic - INFO - Iteration 1 started.
+2018-08-22 11:25:39,427 - seismic - INFO - Optimizing: hyp
+2018-08-22 11:25:53,349 - seismic - INFO - Optimizing: mog
+2018-08-22 11:25:58,787 - seismic - INFO - Interrupted by the user.

@@ -1,0 +1,31 @@
+2018-08-23 14:15:05,130 - seismic - INFO - experiment started for:{'latent_noise:': 0.001, 'optimize_stochastic': False, 'sparsity_factor': 1.0, 'experiment': 'seismic', 'run_id': 1, 'll': 'SeismicLL', 'max_iter': 200, 'transformer': 'MeanStdXTransformation', 'sample_num': 100000, 'optimization_config': {'hyp': 100, 'mog': 100}, 'git_branch': 'seismic-dev', 'xtol': 0.001, 'random_Z': False, 'git_hash': '159fd534a5a5d8b8929558c645efcb63ba2058b6', 'method': 'full', 'model_init': None, 'ftol': 1e-05}
+2018-08-23 14:15:17,442 - seismic - INFO - Iteration 1 started.
+2018-08-23 14:15:17,443 - seismic - INFO - Optimizing: hyp
+2018-08-23 14:15:27,122 - seismic - DEBUG - Objective: -503.7861; KL: 65941.8314;  NELL: -503.7861
+2018-08-23 14:15:27,264 - seismic - DEBUG - Objective: -503.7861; KL: 67410.7924;  NELL: -503.7861
+2018-08-23 14:15:27,431 - seismic - DEBUG - Objective: -503.7861; KL: 65409.3392;  NELL: -503.7861
+2018-08-23 14:15:27,596 - seismic - DEBUG - Objective: -503.7861; KL: 65648.4955;  NELL: -503.7861
+2018-08-23 14:15:27,762 - seismic - DEBUG - Objective: -503.7861; KL: 65150.3392;  NELL: -503.7861
+2018-08-23 14:15:27,933 - seismic - DEBUG - Objective: -503.7861; KL: 64889.4408;  NELL: -503.7861
+2018-08-23 14:15:28,099 - seismic - DEBUG - Objective: -503.7861; KL: 65784.9174;  NELL: -503.7861
+2018-08-23 14:15:28,262 - seismic - DEBUG - Objective: -503.7861; KL: 65417.6439;  NELL: -503.7861
+2018-08-23 14:15:28,429 - seismic - DEBUG - Objective: -503.7861; KL: 64974.7924;  NELL: -503.7861
+2018-08-23 14:15:28,597 - seismic - DEBUG - Objective: -503.7861; KL: 65367.1752;  NELL: -503.7861
+2018-08-23 14:15:29,000 - seismic - DEBUG - Objective: -503.7861; KL: 66078.8627;  NELL: -503.7861
+2018-08-23 14:15:29,163 - seismic - DEBUG - Objective: -503.7861; KL: 65889.9799;  NELL: -503.7861
+2018-08-23 14:15:29,332 - seismic - DEBUG - Objective: -503.7861; KL: 65889.9799;  NELL: -503.7861
+2018-08-23 14:15:29,497 - seismic - DEBUG - Objective: -503.7861; KL: 65889.9799;  NELL: -503.7861
+2018-08-23 14:15:29,667 - seismic - DEBUG - Objective: -503.7861; KL: 65889.9799;  NELL: -503.7861
+2018-08-23 14:15:29,831 - seismic - DEBUG - Objective: -503.7861; KL: 65889.9799;  NELL: -503.7861
+2018-08-23 14:15:29,999 - seismic - DEBUG - Objective: -503.7861; KL: 65889.9799;  NELL: -503.7861
+2018-08-23 14:15:30,164 - seismic - DEBUG - Objective: -503.7861; KL: 65889.9799;  NELL: -503.7861
+2018-08-23 14:15:30,331 - seismic - DEBUG - Objective: -503.7861; KL: 65889.9799;  NELL: -503.7861
+2018-08-23 14:15:30,499 - seismic - DEBUG - Objective: -503.7861; KL: 65889.9799;  NELL: -503.7861
+2018-08-23 14:15:30,666 - seismic - DEBUG - Objective: -503.7861; KL: 65889.9799;  NELL: -503.7861
+2018-08-23 14:15:30,829 - seismic - INFO - Optimizing: mog
+2018-08-23 14:15:41,534 - seismic - DEBUG - Objective: -503.7867; KL: 65889.9799;  NELL: -503.7867
+2018-08-23 14:15:52,213 - seismic - DEBUG - Objective: -503.7886; KL: 56172.2241;  NELL: -503.7886
+2018-08-23 14:16:03,520 - seismic - DEBUG - Objective: -503.7881; KL: 63539.2683;  NELL: -503.7881
+2018-08-23 14:16:13,416 - seismic - INFO - Interrupted by the user.
+2018-08-23 14:16:13,416 - seismic - INFO - Last objective value: -503.788147
+2018-08-23 14:16:13,490 - seismic - DEBUG - prediction started...
