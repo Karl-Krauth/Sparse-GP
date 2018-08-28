@@ -3,7 +3,8 @@ require(RColorBrewer)
 require(ggplot2)
 
 #input_path = "results/var_div10/"
-input_path = 'results/seismic_23-Aug-2018_14h38m48s_22901/'
+# input_path = 'results/seismic_23-Aug-2018_14h38m48s_22901/' # noisy init of posterior + {hyp, mog} opt + std transf of input
+input_path = 'results/seismic_28-Aug-2018_12h23m10s_3194/' # noisy init posterior + {mog} opt + indentity transf of input
 
 aa = read.csv(paste0(input_path, "predictions.csv"))
 x1 =   read.csv(paste0(input_path, "train.csv"))$X_0
