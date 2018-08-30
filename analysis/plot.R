@@ -3,8 +3,12 @@ require(RColorBrewer)
 require(ggplot2)
 
 #input_path = "results/var_div10/"
-# input_path = 'results/seismic_23-Aug-2018_14h38m48s_22901/' # noisy init of posterior + {hyp, mog} opt + std transf of input
-input_path = 'results/seismic_28-Aug-2018_12h23m10s_3194/' # noisy init posterior + {mog} opt + indentity transf of input
+#input_path = 'results/seismic_21-Aug-2018_16h47m44s_135476/' # noiseless init of posterior + {hyp, mog} opt + std transf of input
+#input_path = 'results/seismic_23-Aug-2018_14h38m48s_22901/' # noisy init of posterior + {hyp, mog} opt + std transf of input
+#input_path = 'results/seismic_28-Aug-2018_12h23m10s_3194/' # noisy init posterior + {mog} opt + indentity transf of input
+#input_path = '/Users/bon136/Documents/savigp/code/results/seismic_29-Aug-2018_10h50m41s_19893/'
+#input_path = '/Users/bon136/Documents/savigp/code/results/seismic_29-Aug-2018_11h48m45s_20477/'
+input_path = '/Users/bon136/Documents/savigp/code/results/seismic_29-Aug-2018_16h14m21s_23850/'
 
 aa = read.csv(paste0(input_path, "predictions.csv"))
 x1 =   read.csv(paste0(input_path, "train.csv"))$X_0
@@ -87,3 +91,31 @@ ggplot(d, aes(x = x1, y = value, group=variable, color=col)) +
   guides(fill = guide_legend(keywidth = 0.5, keyheight = 0.5, nrow = 2))
 
 ggsave("vel.pdf", height = 8, width = 8, units = "cm")
+
+
+# Times
+times = data[,c("true_Y_0", "true_Y_1", "true_Y_2", "true_Y_3", "x1")]
+times = melt(times, id = "x1")
+d = cbind(times)
+d$value = -d$value
+ggplot(d, aes(x = x1, y = value, group=variable, color=col)) + 
+  geom_line() +
+xlab("Sensor location (m)") +
+  ylab("times (/s)") +
+  theme(legend.direction = "horizontal", legend.position = "none", legend.box = "horizontal", 
+        axis.line = element_line(colour = "black"),
+        panel.grid.major=element_blank(), 
+        panel.grid.minor=element_blank(),      
+        panel.border = element_blank(),
+        text=element_text(size=10),
+        legend.title=element_blank(),
+        legend.margin=margin(t = -0.2, unit='cm') ,
+        plot.margin = unit(x = c(0.01, 0.01, 0.01, 0.01), units = "cm"),        
+        #      axis.text.x = element_blank(),
+        legend.key = element_blank(),
+        panel.background = element_rect(fill=NA, color ="black")
+  ) +
+  guides(fill = guide_legend(keywidth = 0.5, keyheight = 0.5, nrow = 2))
+ggsave("times.pdf", height = 8, width = 8, units = "cm")
+
+

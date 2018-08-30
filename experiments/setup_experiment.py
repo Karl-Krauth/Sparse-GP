@@ -611,14 +611,16 @@ def seismic_experiment(method, components, sparsity_factor, run_id,
     name = 'seismic'
     data = data_source.seismic_data()[0]
 
-    #TODO
-    # not the divide by 10 is not correct and just for testing.
-    # the original var (without dividing is not working)
-    prior_var = np.array([900, 5625, 57600, 108900, 38025, 52900, 75625, 133225])
-
-    prior_mu = [200, 500, 1600, 2200, 1950, 2300, 2750, 3650]
-
-    sigma2y = [0.0006, 0.0025, 0.0056, 0.0100]
+    # prior_var = np.array([900, 5625, 57600, 108900, 38025, 52900, 75625, 133225])
+    # prior_mu = [200, 500, 1600, 2200, 1950, 2300, 2750, 3650]
+    # sigma2y = [0.0006, 0.0025, 0.0056, 0.0100]
+    mean_depth = np.array([200.0, 500.0, 1600.0, 2200.0], dtype=np.double)
+    mean_vel = np.array([1950.0, 2300.0, 2750.0, 3650.0], dtype=np.double)
+    std_depth = mean_depth * 0.15
+    std_vel = mean_vel * 0.10
+    prior_mu = np.hstack((mean_depth, mean_vel))
+    prior_var = np.square(np.hstack((std_depth, std_vel)))
+    sigma2y = np.square([0.025, 0.05, 0.075, 0.1])
 
     input_dim = data['train_inputs'].shape[1]
 
