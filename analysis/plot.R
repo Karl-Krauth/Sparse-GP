@@ -9,7 +9,9 @@ require(ggplot2)
 #input_path = '/Users/bon136/Documents/savigp/code/results/seismic_29-Aug-2018_10h50m41s_19893/'
 #input_path = '/Users/bon136/Documents/savigp/code/results/seismic_29-Aug-2018_11h48m45s_20477/'
 input_path = '/Users/bon136/Documents/savigp/code/results/seismic_29-Aug-2018_16h14m21s_23850/'
+#input_path = '/Users/bon136/Documents/savigp/code/results/seismic_30-Aug-2018_11h05m24s_27427/'
 
+ 
 aa = read.csv(paste0(input_path, "predictions.csv"))
 x1 =   read.csv(paste0(input_path, "train.csv"))$X_0
 x2 =   x1

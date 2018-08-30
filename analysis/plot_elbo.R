@@ -10,3 +10,4 @@ ggplot(data, aes(x = x, y = nelbo)) +
   scale_y_continuous(trans = "log")
 ggsave("nelbo.pdf", height = 8, width = 8, units = "cm")
 
+
