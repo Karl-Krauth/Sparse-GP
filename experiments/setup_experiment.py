@@ -607,7 +607,7 @@ def get_kernels(input_dim, num_latent_proc, ARD):
 
 def seismic_experiment(method, components, sparsity_factor, run_id,
                        image=None, n_threads=1, partition_size=3000,
-                       optimize_stochastic=False):
+                       optimize_stochastic=False, num_samples=100000):
     name = 'seismic'
     data = data_source.seismic_data()[0]
 
@@ -653,9 +653,10 @@ def seismic_experiment(method, components, sparsity_factor, run_id,
                                model_image_dir=image,
                                GP_mean=prior_mu,
                                # init_var=prior_var/10,
-                               num_samples=100000,
+                               num_samples=num_samples,
                                )
 
 
 if __name__ == '__main__':
-    seismic_experiment('full', 1, 1.0, 1, None)
+    seismic_experiment('full', components=1, sparsity_factor=1.0, run_id=1, image=None, optimize_stochastic=False,
+                       num_samples=100000)
