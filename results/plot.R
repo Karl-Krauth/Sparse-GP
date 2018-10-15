@@ -2,13 +2,15 @@ require(reshape2)
 require(ggplot2)
 
 input_path = "results/seismic_resuls/SAVIGP_results/"
+x =   read.csv(paste0(input_path, "train.csv"))$X_0
 
+#  MCMC data
+mcmc_res = cbind(read.csv("results/seismic_resuls/mcmc_results.csv"), x)
 
 data = read.csv(paste0(input_path, "predictions.csv"))
-x =   read.csv(paste0(input_path, "train.csv"))$X_0
 data = cbind(data, x)
 
-# for depth
+# for depth using SAVIGP
 depth = data[,c("predicted_Y_0", "predicted_Y_1", "predicted_Y_2", "predicted_Y_3", "x")]
 depth_var = data[,c("predicted_variance_0", "predicted_variance_1", "predicted_variance_2", "predicted_variance_3", "x")]
 
@@ -23,9 +25,20 @@ d_low = d$value - sqrt(d$var) * 10
 library(RColorBrewer)
 col = brewer.pal(4, "OrRd")[4]
 
-ggplot(d, aes(x = x, y = value, group=variable, color=col)) + 
+
+depth_mcmc = melt(mcmc_res[, c("mean_depth_0", "mean_depth_1", "mean_depth_2", "mean_depth_3", "x")], id = 'x')
+depth_mcmc$value = -depth_mcmc$value
+depth_var_mcmc = melt(mcmc_res[, c("std_depth_0", "std_depth_1", "std_depth_2", "std_depth_3", "x")], id = 'x')
+
+mcmc_high = depth_mcmc$value + depth_var_mcmc$value
+mcmc_low = depth_mcmc$value - depth_var_mcmc$value
+
+
+ggplot(d, aes(x = x, y = value, group=variable, color=col)) +
   geom_line()+
+  geom_line(aes(x = depth_mcmc$x, y = depth_mcmc$value, group=depth_mcmc$variable, color=col),  linetype = 2)+
   geom_ribbon(aes(ymin=d_low,ymax=d_high),alpha=0.3)  +
+  geom_ribbon(aes(ymin=mcmc_low,ymax=mcmc_high),alpha=0.3, fill= "blue", linetype = 2)  +
   theme_bw() +
   xlab("Sensor location (m)") +
   ylab("Height (m)") +
@@ -60,12 +73,23 @@ d$value = d$value * 10
 d_high = d$value + sqrt(d$var) * 10
 d_low = d$value - sqrt(d$var) * 10
 
+vel_mcmc = melt(mcmc_res[, c("mean_vel_0", "mean_vel_1", "mean_vel_2", "mean_vel_3", "x")], id = 'x')
+vel_mcmc$value = vel_mcmc$value
+vel_var_mcmc = melt(mcmc_res[, c("std_vel_0", "std_vel_1", "std_vel_2", "std_vel_3", "x")], id = 'x')
+
+mcmc_high = vel_mcmc$value + vel_var_mcmc$value
+mcmc_low = vel_mcmc$value - vel_var_mcmc$value
+
+
 col = brewer.pal(4, "OrRd")[4]
+
 
 require(ggplot2)
 ggplot(d, aes(x = x, y = value, group=variable, color=col)) + 
   geom_line()+
   geom_ribbon(aes(ymin=d_low,ymax=d_high),alpha=0.3)  +
+  geom_line(aes(x = vel_mcmc$x, y = vel_mcmc$value, group=vel_mcmc$variable, color=col),  linetype = 2)+
+  geom_ribbon(aes(ymin=mcmc_low,ymax=mcmc_high),alpha=0.3, linetype = 2, fill= "blue")  +
   theme_bw() +
   xlab("Sensor location (m)") +
   ylab("Velocity (m/s)") +
