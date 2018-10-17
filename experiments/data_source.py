@@ -407,7 +407,7 @@ def airline_data():
 
 def seismic_data():
     data = []
-    train = pandas.read_csv(os.path.join(SEISMIC_DIR, 'data.csv'), header=None)
+    train = pandas.read_csv(os.path.join(SEISMIC_DIR, 'data.csv'), header=None, dtype=np.double)
     data.append({
         'train_outputs': train.ix[:, 0:3].values,
         'train_inputs': train.ix[:, 4:5].values,
