@@ -614,12 +614,14 @@ def seismic_experiment(method, components, sparsity_factor, run_id,
     # prior_var = np.array([900, 5625, 57600, 108900, 38025, 52900, 75625, 133225])
     # prior_mu = [200, 500, 1600, 2200, 1950, 2300, 2750, 3650]
     # sigma2y = [0.0006, 0.0025, 0.0056, 0.0100]
+
+    scale_factor = 10.  # for numerical reasons (final predicitons to be post-processed)
     mean_depth = np.array([200.0, 500.0, 1600.0, 2200.0], dtype=np.double)
     mean_vel = np.array([1950.0, 2300.0, 2750.0, 3650.0], dtype=np.double)
     std_depth = mean_depth * 0.15
     std_vel = mean_vel * 0.10
-    prior_mu = np.hstack((mean_depth, mean_vel)) / 10.
-    prior_var = np.square(np.hstack((std_depth, std_vel))) / 10. / 10.
+    prior_mu = np.hstack((mean_depth, mean_vel)) / scale_factor
+    prior_var = np.square(np.hstack((std_depth, std_vel))) / (scale_factor * scale_factor)
     sigma2y = np.square([0.025, 0.05, 0.075, 0.1])
 
     input_dim = data['train_inputs'].shape[1]
@@ -652,8 +654,8 @@ def seismic_experiment(method, components, sparsity_factor, run_id,
                                n_threads=n_threads,
                                model_image_dir=image,
                                GP_mean=prior_mu,
-                               init_var=prior_var,
-                               num_samples=10000,
+                               init_var=0.001*prior_var,
+                               num_samples=100000,
                                )
 
 
