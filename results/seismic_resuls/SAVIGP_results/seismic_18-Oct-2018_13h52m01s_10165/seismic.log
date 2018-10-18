@@ -1,0 +1,102 @@
+2018-10-18 13:52:01,462 - seismic - INFO - experiment started for:{'latent_noise:': 0.001, 'optimize_stochastic': False, 'sparsity_factor': 1.0, 'experiment': 'seismic', 'run_id': 1, 'll': 'SeismicLL', 'max_iter': 200, 'transformer': 'IdentityTransformation', 'sample_num': 100000, 'optimization_config': {'mog': 100}, 'git_branch': 'seismic', 'xtol': 0.001, 'random_Z': False, 'git_hash': '6d11a4e87bbb41a0f84c2ff1fdd4426ac7fe5c31', 'method': 'full', 'model_init': None, 'ftol': 1e-05}
+2018-10-18 13:52:10,155 - seismic - INFO - Iteration 1 started.
+2018-10-18 13:52:10,156 - seismic - INFO - Optimizing: mog
+2018-10-18 13:52:10,282 - seismic - DEBUG - Objective: 2620.5571 - KL: 3122.2776 - ELL: 501.7205
+2018-10-18 13:52:18,778 - seismic - DEBUG - Objective: 2590.6435 - KL: 3092.7190 - ELL: 502.0755
+2018-10-18 13:52:27,195 - seismic - DEBUG - Objective: 2469.4778 - KL: 2973.9493 - ELL: 504.4714
+2018-10-18 13:52:35,679 - seismic - DEBUG - Objective: 1986.8816 - KL: 2499.5785 - ELL: 512.6969
+2018-10-18 13:52:44,437 - seismic - DEBUG - Objective: 400.7823 - KL: 718.6460 - ELL: 317.8637
+2018-10-18 13:52:52,942 - seismic - DEBUG - Objective: 115871984390.0400 - KL: 19206.0400 - ELL: -115871965184.0000
+2018-10-18 13:53:01,613 - seismic - DEBUG - Objective: 434.2985 - KL: 580.3721 - ELL: 146.0736
+2018-10-18 13:53:10,393 - seismic - DEBUG - Objective: 330.5389 - KL: 608.7930 - ELL: 278.2541
+2018-10-18 13:53:18,952 - seismic - DEBUG - Objective: 333.5873 - KL: 715.6660 - ELL: 382.0787
+2018-10-18 13:53:27,464 - seismic - DEBUG - Objective: 320.8092 - KL: 652.9622 - ELL: 332.1529
+2018-10-18 13:53:36,000 - seismic - DEBUG - Objective: 312.3118 - KL: 634.8718 - ELL: 322.5600
+2018-10-18 13:53:44,536 - seismic - DEBUG - Objective: 298.5024 - KL: 636.6409 - ELL: 338.1385
+2018-10-18 13:53:53,070 - seismic - DEBUG - Objective: 234.5906 - KL: 666.8308 - ELL: 432.2402
+2018-10-18 13:54:01,643 - seismic - DEBUG - Objective: 186.8076 - KL: 720.4006 - ELL: 533.5930
+2018-10-18 13:54:10,249 - seismic - DEBUG - Objective: 168.6074 - KL: 721.3782 - ELL: 552.7708
+2018-10-18 13:54:19,302 - seismic - DEBUG - Objective: 156.9241 - KL: 707.2554 - ELL: 550.3312
+2018-10-18 13:54:28,142 - seismic - DEBUG - Objective: 151.3133 - KL: 695.1536 - ELL: 543.8403
+2018-10-18 13:54:36,681 - seismic - DEBUG - Objective: 147.6486 - KL: 696.5876 - ELL: 548.9391
+2018-10-18 13:54:45,104 - seismic - DEBUG - Objective: 139.9626 - KL: 703.8601 - ELL: 563.8975
+2018-10-18 13:54:53,464 - seismic - DEBUG - Objective: 135.0273 - KL: 709.6719 - ELL: 574.6446
+2018-10-18 13:55:01,840 - seismic - DEBUG - Objective: 130.2624 - KL: 704.2078 - ELL: 573.9454
+2018-10-18 13:55:10,163 - seismic - DEBUG - Objective: 115.8442 - KL: 686.5312 - ELL: 570.6871
+2018-10-18 13:55:18,678 - seismic - DEBUG - Objective: 101.2217 - KL: 686.7815 - ELL: 585.5598
+2018-10-18 13:55:27,117 - seismic - DEBUG - Objective: 88.5204 - KL: 694.1614 - ELL: 605.6409
+2018-10-18 13:55:35,540 - seismic - DEBUG - Objective: 83.2846 - KL: 692.3606 - ELL: 609.0760
+2018-10-18 13:55:44,102 - seismic - DEBUG - Objective: 81.4940 - KL: 689.6411 - ELL: 608.1471
+2018-10-18 13:55:52,496 - seismic - DEBUG - Objective: 80.9731 - KL: 687.9978 - ELL: 607.0247
+2018-10-18 13:56:00,797 - seismic - DEBUG - Objective: 80.7321 - KL: 688.3198 - ELL: 607.5877
+2018-10-18 13:56:09,098 - seismic - DEBUG - Objective: 80.4955 - KL: 688.9612 - ELL: 608.4657
+2018-10-18 13:56:17,390 - seismic - DEBUG - Objective: 80.3708 - KL: 688.6541 - ELL: 608.2833
+2018-10-18 13:56:25,716 - seismic - DEBUG - Objective: 80.2698 - KL: 687.9941 - ELL: 607.7243
+2018-10-18 13:56:34,024 - seismic - DEBUG - Objective: 80.0545 - KL: 688.0571 - ELL: 608.0026
+2018-10-18 13:56:42,422 - seismic - DEBUG - Objective: 79.6798 - KL: 688.4968 - ELL: 608.8170
+2018-10-18 13:56:50,753 - seismic - DEBUG - Objective: 78.7938 - KL: 690.1777 - ELL: 611.3840
+2018-10-18 13:56:59,321 - seismic - DEBUG - Objective: 78.0528 - KL: 692.2568 - ELL: 614.2040
+2018-10-18 13:57:07,736 - seismic - DEBUG - Objective: 76.9783 - KL: 693.3071 - ELL: 616.3288
+2018-10-18 13:57:16,044 - seismic - DEBUG - Objective: 74.9568 - KL: 694.3435 - ELL: 619.3867
+2018-10-18 13:57:24,436 - seismic - DEBUG - Objective: 72.7726 - KL: 695.8333 - ELL: 623.0606
+2018-10-18 13:57:32,873 - seismic - DEBUG - Objective: 71.1640 - KL: 696.6436 - ELL: 625.4796
+2018-10-18 13:57:41,162 - seismic - DEBUG - Objective: 69.9382 - KL: 696.9771 - ELL: 627.0389
+2018-10-18 13:57:49,760 - seismic - DEBUG - Objective: 69.1321 - KL: 697.3525 - ELL: 628.2205
+2018-10-18 13:57:58,077 - seismic - DEBUG - Objective: 68.9722 - KL: 697.2808 - ELL: 628.3086
+2018-10-18 13:58:06,383 - seismic - DEBUG - Objective: 68.8645 - KL: 697.2527 - ELL: 628.3882
+2018-10-18 13:58:14,678 - seismic - DEBUG - Objective: 68.7062 - KL: 697.1899 - ELL: 628.4837
+2018-10-18 13:58:23,070 - seismic - DEBUG - Objective: 68.6533 - KL: 696.9546 - ELL: 628.3013
+2018-10-18 13:58:31,526 - seismic - DEBUG - Objective: 68.3724 - KL: 696.2161 - ELL: 627.8436
+2018-10-18 13:58:39,914 - seismic - DEBUG - Objective: 68.1432 - KL: 694.8049 - ELL: 626.6617
+2018-10-18 13:58:48,249 - seismic - DEBUG - Objective: 67.6637 - KL: 692.6409 - ELL: 624.9772
+2018-10-18 13:58:56,550 - seismic - DEBUG - Objective: 67.5510 - KL: 690.1892 - ELL: 622.6382
+2018-10-18 13:59:04,854 - seismic - DEBUG - Objective: 67.4870 - KL: 690.6472 - ELL: 623.1602
+2018-10-18 13:59:13,168 - seismic - DEBUG - Objective: 67.3521 - KL: 691.0093 - ELL: 623.6572
+2018-10-18 13:59:21,680 - seismic - DEBUG - Objective: 67.3144 - KL: 690.9153 - ELL: 623.6009
+2018-10-18 13:59:30,096 - seismic - DEBUG - Objective: 67.2712 - KL: 690.5586 - ELL: 623.2874
+2018-10-18 13:59:38,424 - seismic - DEBUG - Objective: 67.3171 - KL: 690.2390 - ELL: 622.9219
+2018-10-18 13:59:46,705 - seismic - DEBUG - Objective: 67.3446 - KL: 690.5173 - ELL: 623.1727
+2018-10-18 13:59:55,024 - seismic - DEBUG - Objective: 67.3876 - KL: 690.5579 - ELL: 623.1702
+2018-10-18 14:00:03,337 - seismic - DEBUG - Objective: 67.3279 - KL: 690.5586 - ELL: 623.2307
+2018-10-18 14:00:11,636 - seismic - DEBUG - Objective: 67.3842 - KL: 690.5586 - ELL: 623.1744
+2018-10-18 14:00:19,985 - seismic - DEBUG - Objective: 67.1967 - KL: 690.5586 - ELL: 623.3619
+2018-10-18 14:00:28,322 - seismic - DEBUG - Objective: 67.4109 - KL: 690.7893 - ELL: 623.3784
+2018-10-18 14:00:36,637 - seismic - DEBUG - Objective: 67.3248 - KL: 690.5864 - ELL: 623.2616
+2018-10-18 14:00:45,053 - seismic - DEBUG - Objective: 67.3756 - KL: 690.5601 - ELL: 623.1844
+2018-10-18 14:00:53,396 - seismic - DEBUG - Objective: 67.4433 - KL: 690.5586 - ELL: 623.1153
+2018-10-18 14:01:01,855 - seismic - DEBUG - Objective: 67.4034 - KL: 690.5586 - ELL: 623.1552
+2018-10-18 14:01:10,404 - seismic - DEBUG - Objective: 67.4003 - KL: 690.5586 - ELL: 623.1583
+2018-10-18 14:01:10,404 - seismic - DEBUG - Objective: 67.4003 - KL: 690.5586 - ELL: 623.1583
+2018-10-18 14:01:10,439 - seismic - INFO - Iteration 2 started.
+2018-10-18 14:01:10,440 - seismic - INFO - Optimizing: mog
+2018-10-18 14:01:10,505 - seismic - DEBUG - Objective: 67.4003 - KL: 690.5586 - ELL: 623.1583
+2018-10-18 14:01:18,646 - seismic - DEBUG - Objective: 68.0544 - KL: 691.5100 - ELL: 623.4556
+2018-10-18 14:01:26,773 - seismic - DEBUG - Objective: 67.3384 - KL: 690.6824 - ELL: 623.3439
+2018-10-18 14:01:34,966 - seismic - DEBUG - Objective: 67.2844 - KL: 690.7583 - ELL: 623.4739
+2018-10-18 14:01:43,134 - seismic - DEBUG - Objective: 67.2519 - KL: 690.7991 - ELL: 623.5472
+2018-10-18 14:01:51,268 - seismic - DEBUG - Objective: 67.3407 - KL: 690.7871 - ELL: 623.4464
+2018-10-18 14:01:59,294 - seismic - DEBUG - Objective: 67.2715 - KL: 690.7986 - ELL: 623.5271
+2018-10-18 14:02:07,561 - seismic - DEBUG - Objective: 67.3154 - KL: 690.7991 - ELL: 623.4837
+2018-10-18 14:02:15,644 - seismic - DEBUG - Objective: 67.2918 - KL: 690.7991 - ELL: 623.5073
+2018-10-18 14:02:23,639 - seismic - DEBUG - Objective: 67.3673 - KL: 690.7991 - ELL: 623.4318
+2018-10-18 14:02:23,639 - seismic - DEBUG - Objective: 67.3673 - KL: 690.7991 - ELL: 623.4318
+2018-10-18 14:02:23,666 - seismic - DEBUG - Objective difference: 0.033020
+2018-10-18 14:02:23,666 - seismic - INFO - Mean difference: 0.002746
+2018-10-18 14:02:23,666 - seismic - INFO - Covariance difference: 0.000098
+2018-10-18 14:02:23,666 - seismic - INFO - Iteration 3 started.
+2018-10-18 14:02:23,666 - seismic - INFO - Optimizing: mog
+2018-10-18 14:02:23,729 - seismic - DEBUG - Objective: 67.3673 - KL: 690.7991 - ELL: 623.4318
+2018-10-18 14:02:31,823 - seismic - DEBUG - Objective: 68.0522 - KL: 691.5735 - ELL: 623.5212
+2018-10-18 14:02:39,920 - seismic - DEBUG - Objective: 67.3032 - KL: 690.8840 - ELL: 623.5809
+2018-10-18 14:02:47,901 - seismic - DEBUG - Objective: 67.2281 - KL: 690.8560 - ELL: 623.6279
+2018-10-18 14:02:55,971 - seismic - DEBUG - Objective: 67.3447 - KL: 690.7856 - ELL: 623.4410
+2018-10-18 14:03:04,051 - seismic - DEBUG - Objective: 67.2046 - KL: 690.8533 - ELL: 623.6487
+2018-10-18 14:03:12,127 - seismic - DEBUG - Objective: 67.2200 - KL: 690.8132 - ELL: 623.5933
+2018-10-18 14:03:20,324 - seismic - DEBUG - Objective: 67.1929 - KL: 690.8499 - ELL: 623.6570
+2018-10-18 14:03:28,530 - seismic - DEBUG - Objective: 67.4303 - KL: 690.8499 - ELL: 623.4196
+2018-10-18 14:03:36,593 - seismic - DEBUG - Objective: 67.3771 - KL: 690.8499 - ELL: 623.4727
+2018-10-18 14:03:36,617 - seismic - DEBUG - Objective difference: -0.009827
+2018-10-18 14:03:36,618 - seismic - INFO - Mean difference: 0.001870
+2018-10-18 14:03:36,618 - seismic - INFO - Covariance difference: 0.000078
+2018-10-18 14:03:36,618 - seismic - DEBUG - prediction started...
+2018-10-18 14:03:41,918 - seismic - DEBUG - prediction finished
