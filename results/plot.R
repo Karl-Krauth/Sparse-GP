@@ -1,10 +1,7 @@
 require(reshape2)
 require(ggplot2)
 
-#input_path = "results/seismic_resuls/SAVIGP_results/"
-#input_path = "../results/seismic_18-Oct-2018_12h45m35s_9281/"
-#input_path = "../results/seismic_18-Oct-2018_13h47m32s_10060/"
-input_path = "../results/seismic_18-Oct-2018_13h52m01s_10165/"
+#input_path = "results/seismic_resuls/SAVIGP_results/seismic_18-Oct-2018_13h52m01s_10165/"
 
 
 x1 =   read.csv(paste0(input_path, "train.csv"))$X_0
