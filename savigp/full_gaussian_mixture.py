@@ -23,11 +23,15 @@ class FullGaussianMixture(gaussian_mixture.GaussianMixture):
     initial_mean : ndarray
         The initial mean of the gaussian mixture. Dimensions: 1 * num_latent * num_dim.
     """
-    def __init__(self, num_latent, initial_mean):
+    def __init__(self, num_latent, initial_mean, init_var):
         super(FullGaussianMixture, self).__init__(1, num_latent, initial_mean)
         self.covars_cholesky = np.tile(np.eye(self.num_dim, dtype=np.float32),
                                        [self.num_latent, 1, 1])
-        self.covars = self.covars_cholesky.copy()
+        if init_var is not None:
+            self.covars_cholesky = np.sqrt(init_var[:, np.newaxis, np.newaxis]) * self.covars_cholesky
+            self.covars = init_var[:, np.newaxis, np.newaxis] * self.covars_cholesky
+        else:
+            self.covars = self.covars_cholesky.copy()
 
     def get_params(self):
         return np.hstack([self.means.flatten(), self._get_raw_covars(),
@@ -63,11 +67,10 @@ class FullGaussianMixture(gaussian_mixture.GaussianMixture):
         return theano.function([a, covar], result)
     _theano_a_dot_covar_dot_a = _compile_a_dot_covar_dot_a()
 
-    def mean_prod_sum_covar(self, component_index, latent_index):
+    def mean_prod_sum_covar(self, component_index, latent_index, offset=0):
         assert component_index == 0
-        return (mdot(self.means[0, latent_index, :, np.newaxis],
-                self.means[0, latent_index, :, np.newaxis].T) +
-                self.covars[latent_index])
+        mu = self.means[0, latent_index, :, np.newaxis] - offset
+        return mdot(mu, mu.T) + self.covars[latent_index]
 
     def covar_dot_a(self, a, component_index, latent_index):
         assert component_index == 0

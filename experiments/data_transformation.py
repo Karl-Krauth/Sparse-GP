@@ -122,6 +122,33 @@ class MeanTransformation(DataTransformation):
         return NLPD
 
 
+class MeanStdXTransformation(DataTransformation):
+    """
+      Transforms only X in a way that the transformed X has mean = 0 and std =1
+      """
+
+    def __init__(self, X, Y):
+        self.scaler = preprocessing.StandardScaler().fit(X)
+
+    def transform_X(self, X):
+        return self.scaler.transform(X)
+
+    def transform_Y(self, Y):
+        return Y
+
+    def untransform_X(self, X):
+        return self.scaler.inverse_transform(X)
+
+    def untransform_Y(self, Y):
+        return Y
+
+    def untransform_Y_var(self, Yvar):
+        return Yvar
+
+    def untransform_NLPD(self, NLPD):
+        return NLPD
+
+
 class MeanStdYTransformation(DataTransformation):
     """
     Transforms only Y in a way that the transformed Y has mean = 0 and std =1

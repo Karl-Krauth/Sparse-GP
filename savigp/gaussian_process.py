@@ -51,7 +51,7 @@ from theano.sandbox import rng_mrg
 import util
 
 # A list of possible sets of parameters ordered according to optimization ordering.
-PARAMETER_SETS = ['hyp', 'mog', 'hyp', 'll', 'inducing']
+PARAMETER_SETS = ['hyp', 'mog', 'hyp', 'll', 'inducing', 'mog_hyp']
 
 
 class GaussianProcess(object):
@@ -113,12 +113,21 @@ class GaussianProcess(object):
                  exact_ell=False,
                  inducing_on_inputs=False,
                  num_threads=1,
-                 partition_size=3000):
+                 partition_size=3000,
+                 GP_mean=None,
+                 init_var=None
+                 ):
         train_inputs = train_inputs.astype(np.float32)
         train_outputs = train_outputs.astype(np.float32)
 
-        # Initialize variables to keep track of various model dimensions.
+        # mean for Gaussian Processes
         self.num_latent = len(kernels)
+        if GP_mean is None:
+            self.GP_mean = np.zeros(self.num_latent)
+        else:
+            self.GP_mean = GP_mean
+
+        # Initialize variables to keep track of various model dimensions.
         self.num_components = num_components
         self.num_inducing = num_inducing
         self.num_samples = num_samples
@@ -145,7 +154,7 @@ class GaussianProcess(object):
         # Initialize the parameters to optimize.
         self.inducing_locations, initial_mean = (
             self._initialize_inducing_points(train_inputs, train_outputs, inducing_on_inputs))
-        self.gaussian_mixture = self._get_gaussian_mixture(initial_mean)
+        self.gaussian_mixture = self._get_gaussian_mixture(initial_mean, init_var)
         self.hyper_params = np.array([self.kernels[i].param_array.copy()
                                       for i in xrange(self.num_latent)], dtype=np.float32)
 
@@ -227,6 +236,15 @@ class GaussianProcess(object):
             self.inducing_locations = new_params.reshape([
                 self.num_latent, self.num_inducing, self.input_dim])
             self.kernel_matrix.set_outdated()
+        elif self.optimization_method == 'mog_hyp':
+            L = self.gaussian_mixture.get_params().size
+            self.gaussian_mixture.set_params(new_params[:L])
+            self.hyper_params = np.exp(new_params[L:].reshape([self.num_latent,
+                                                              self.num_hyper_params]))
+            for i in xrange(self.num_latent):
+                self.kernels[i].param_array[:] = self.hyper_params[i].copy()
+            self._update_latent_kernel()
+
 
         self._update_log_likelihood()
 
@@ -248,6 +266,9 @@ class GaussianProcess(object):
             return self.likelihood.get_params()
         elif self.optimization_method == 'inducing':
             return self.inducing_locations.flatten()
+        elif self.optimization_method == 'mog_hyp':
+            return np.hstack([self.gaussian_mixture.get_params(),
+                             np.log(self.hyper_params.flatten())])
 
     def get_gaussian_mixture_params(self):
         """
@@ -284,6 +305,7 @@ class GaussianProcess(object):
         cross = self._calculate_cross(self._grad_cross_over_weights())
         return -((self._calculate_entropy() + cross) + ell)
 
+
     def objective_function(self):
         """
         Get the current negative log likelihood value.
@@ -294,6 +316,14 @@ class GaussianProcess(object):
             The current negative log likelihood value.
         """
         return -(self.cached_entropy + self.cached_cross + self.cached_ell)
+
+
+
+    def get_kl_term(self):
+        return -(self.cached_entropy + self.cached_cross)
+
+    def get_ell_term(self):
+        return - self.cached_ell
 
     def objective_function_gradients(self):
         """Gets the current negative log likelihood gradients."""
@@ -430,7 +460,7 @@ class GaussianProcess(object):
         num_partitions = ((train_data.shape[0] + partition_size - 1) / partition_size)
         return np.array_split(train_data, num_partitions)
 
-    def _get_gaussian_mixture(self, initial_mean):
+    def _get_gaussian_mixture(self, initial_mean, initial_var):
         """Get the mixture of Gaussians used for representing the posterior distribution."""
         raise NotImplementedError
 
@@ -487,6 +517,71 @@ class GaussianProcess(object):
 
         return inducing_locations, initial_mean
 
+    def  _update_log_likelihood_mog(self, grad_cross_over_weights, num_batches):
+        """
+        Updates objective when mog change
+        :return:
+        """
+        self.cached_ell, grad_ell_over_means, grad_ell_over_covars, grad_ell_over_weights = (
+        self._apply_over_data(self._gaussian_mixture_ell))
+        means_grad = (
+                        (self._grad_entropy_over_means() + self._grad_cross_over_means()) / num_batches +
+                        grad_ell_over_means)
+        covars_grad = (
+                        (self._grad_entropy_over_covars() + self._grad_cross_over_covars()) / num_batches +
+                        self.gaussian_mixture.transform_covars_grad(grad_ell_over_covars))
+        weights_grad = (
+                        (self._grad_entropy_over_weights() + grad_cross_over_weights) / num_batches +
+                        grad_ell_over_weights)
+        self.curr_log_likelihood_gradients = np.hstack([
+                        means_grad.flatten(), covars_grad,
+                        self.gaussian_mixture.transform_weights_grad(weights_grad)])
+
+    def _update_log_likelihood_hyp(self, num_batches):
+        """
+        Updates objective when hyp change
+        :return:
+        """
+        self.cached_ell, grad_ell_over_hyper_params = self._apply_over_data(
+            self._hyper_params_ell)
+        for i in xrange(self.num_latent):
+            self.hyper_params[i] = self.kernels[i].param_array.copy()
+        grad_hyper = (
+                self._grad_cross_over_hyper_params() / num_batches + grad_ell_over_hyper_params)
+        self.curr_log_likelihood_gradients = grad_hyper.flatten() * self.hyper_params.flatten()
+
+    def _update_log_likelihood_mog_hyp(self, grad_cross_over_weights, num_batches):
+        """
+          Updates objective when mog and hyp change
+          :return:
+          """
+        # grad mog
+        self.cached_ell, grad_ell_over_means, grad_ell_over_covars, grad_ell_over_weights = (
+        self._apply_over_data(self._gaussian_mixture_ell))
+        means_grad = (
+                        (self._grad_entropy_over_means() + self._grad_cross_over_means()) / num_batches +
+                        grad_ell_over_means)
+        covars_grad = (
+                        (self._grad_entropy_over_covars() + self._grad_cross_over_covars()) / num_batches +
+                        self.gaussian_mixture.transform_covars_grad(grad_ell_over_covars))
+        weights_grad = (
+                        (self._grad_entropy_over_weights() + grad_cross_over_weights) / num_batches +
+                        grad_ell_over_weights)
+        grad_mog = np.hstack([
+                        means_grad.flatten(), covars_grad,
+                        self.gaussian_mixture.transform_weights_grad(weights_grad)])
+
+        # grad hyp
+        self.cached_ell, grad_ell_over_hyper_params = self._apply_over_data(
+            self._hyper_params_ell)
+        for i in xrange(self.num_latent):
+            self.hyper_params[i] = self.kernels[i].param_array.copy()
+        grad_hyp_mat = (
+                self._grad_cross_over_hyper_params() / num_batches + grad_ell_over_hyper_params)
+        grad_hyp = grad_hyp_mat.flatten() * self.hyper_params.flatten()
+        self.curr_log_likelihood_gradients = np.hstack([grad_mog, grad_hyp])
+
+
     def _update_log_likelihood(self):
         """
         Updates objective function and its gradients under current configuration and stores them in
@@ -503,36 +598,24 @@ class GaussianProcess(object):
 
         # Update the objective gradients and the ell component.
         if self.optimization_method == 'mog':
-            self.cached_ell, grad_ell_over_means, grad_ell_over_covars, grad_ell_over_weights = (
-                self._apply_over_data(self._gaussian_mixture_ell))
-            means_grad = (
-                (self._grad_entropy_over_means() + self._grad_cross_over_means()) / num_batches +
-                grad_ell_over_means)
-            covars_grad = (
-                (self._grad_entropy_over_covars() + self._grad_cross_over_covars()) / num_batches +
-                self.gaussian_mixture.transform_covars_grad(grad_ell_over_covars))
-            weights_grad = (
-                (self._grad_entropy_over_weights() + grad_cross_over_weights) / num_batches +
-                grad_ell_over_weights)
-            self.curr_log_likelihood_gradients = np.hstack([
-                means_grad.flatten(), covars_grad,
-                self.gaussian_mixture.transform_weights_grad(weights_grad)])
+            self._update_log_likelihood_mog(grad_cross_over_weights, num_batches)
+
         elif self.optimization_method == 'hyp':
-            self.cached_ell, grad_ell_over_hyper_params = self._apply_over_data(
-                self._hyper_params_ell)
-            for i in xrange(self.num_latent):
-                self.hyper_params[i] = self.kernels[i].param_array.copy()
-            grad_hyper = (
-                self._grad_cross_over_hyper_params() / num_batches + grad_ell_over_hyper_params)
-            self.curr_log_likelihood_gradients = grad_hyper.flatten() * self.hyper_params.flatten()
+            self._update_log_likelihood_hyp(num_batches)
+
         elif self.optimization_method == 'll':
             self.cached_ell, grad_ell_over_likelihood_params = self._apply_over_data(
                 self._likelihood_params_ell)
             self.curr_log_likelihood_gradients = grad_ell_over_likelihood_params
+
         elif self.optimization_method == 'inducing':
             self.cached_ell, grad_ell_over_inducing = self._apply_over_data(self._inducing_ell)
             grad_inducing = self._grad_cross_over_inducing() / num_batches + grad_ell_over_inducing
             self.curr_log_likelihood_gradients = grad_inducing.flatten()
+
+        elif self.optimization_method == 'mog_hyp':
+            self._update_log_likelihood_mog_hyp(grad_cross_over_weights, num_batches)
+
 
     def _update_latent_kernel(self):
         """Update kernels by adding latent noise to all of them."""
@@ -794,7 +877,7 @@ class GaussianProcess(object):
             for j in xrange(self.num_latent):
                 grad[i, j] = -(self.gaussian_mixture.weights[i] *
                                scipy.linalg.cho_solve((self.kernel_matrix.cholesky[j], True),
-                               self.gaussian_mixture.means[i, j]))
+                                                      (self.gaussian_mixture.means[i, j] - self.GP_mean[j])))
 
         return grad
 
@@ -833,8 +916,8 @@ class GaussianProcess(object):
         for i in xrange(self.num_components):
             for j in xrange(self.num_latent):
                 mean = self.gaussian_mixture.means[i, j]
-                mean_dot_kern_inv_dot_mean = mdot(mean.T, scipy.linalg.cho_solve(
-                    (self.kernel_matrix.cholesky[j], True), mean))
+                mean_dot_kern_inv_dot_mean = mdot(mean.T - self.GP_mean[j], scipy.linalg.cho_solve(
+                    (self.kernel_matrix.cholesky[j], True), mean - self.GP_mean[j]))
                 grad[i] += (
                     self.num_inducing * np.log(2 * np.pi) + self.kernel_matrix.log_determinant[j] +
                     mean_dot_kern_inv_dot_mean + self.gaussian_mixture.trace_with_covar(
@@ -896,7 +979,7 @@ class GaussianProcess(object):
                 -0.5 * self.gaussian_mixture.weights[i] * (self.kernel_matrix.inverse[latent_index] -
                 scipy.linalg.cho_solve((self.kernel_matrix.cholesky[latent_index], True),
                 scipy.linalg.cho_solve((self.kernel_matrix.cholesky[latent_index], True),
-                self.gaussian_mixture.mean_prod_sum_covar(i, latent_index).T).T)))
+                self.gaussian_mixture.mean_prod_sum_covar(i, latent_index, self.GP_mean[latent_index]).T).T)))
 
         return grad
 
@@ -1015,8 +1098,8 @@ class GaussianProcess(object):
         """
         grad = np.empty([self.num_latent, self.num_inducing], dtype=np.float32)
         for i in xrange(self.num_latent):
-            mean = util.weighted_average(conditional_ll, normal_samples[i] /
-                                         np.sqrt(sample_vars[i]), self.num_samples)
+            mean = util.average_ctrl_variates(conditional_ll, normal_samples[i] / np.sqrt(sample_vars[i]), self.num_samples)
+
             # TODO(karl): Figure out why we need a double mdot here.
             grad[i] = (self.gaussian_mixture.weights[component_index] *
                        scipy.linalg.cho_solve((self.kernel_matrix.cholesky[i], True),
@@ -1101,10 +1184,10 @@ class GaussianProcess(object):
             for j in xrange(self.num_hyper_params):
                 # TODO(karl): Name this something more meaningful or refactor.
                 val = (np.ones(conditional_ll.shape, dtype=np.float32) / sample_vars[i] *
-                       grad_vars[:, j] - 2.0 * normal_samples[i] / np.sqrt(sample_vars[i]) * 
+                       grad_vars[:, j] - 2.0 * normal_samples[i] / np.sqrt(sample_vars[i]) *
                        grad_means[:, j] - np.square(normal_samples[i]) / sample_vars[i] *
                        grad_vars[:, j])
-                mean = util.weighted_average(conditional_ll, val, self.num_samples)
+                mean = util.average_ctrl_variates(conditional_ll, val, self.num_samples)
                 hyper_params_grad[i, j] = (
                     -1.0 / 2 * self.gaussian_mixture.weights[component_index] * mean.sum())
 
@@ -1204,7 +1287,7 @@ class GaussianProcess(object):
         """
         repeated_means = np.repeat(
             self.gaussian_mixture.means[component_index, latent_index][:, np.newaxis],
-            input_partition.shape[0], axis=1)
+            input_partition.shape[0], axis=1) - self.GP_mean[latent_index]
         return self._grad_kernel_product_over_hyper_params(latent_index, input_partition,
                                                            kernel_products, repeated_means)
 
@@ -1445,12 +1528,17 @@ class GaussianProcess(object):
         for i in xrange(self.num_latent):
             kern_dot_covar_dot_kern = self.gaussian_mixture.a_dot_covar_dot_a(kernel_products[i],
                                                                               component_index, i)
+
+            # non-zero mean GP prior change: b = fbar + A(m - mubar), A = Kxz Kzz^-1
+            m_u = self.gaussian_mixture.means[component_index, i] - self.GP_mean[i]
             normal_samples[i], sample_means[i], sample_vars[i], samples[:, :, i] = (
                 self._theano_get_samples_partition(kernel_products[i],
                                          diag_conditional_covars[i],
                                          kern_dot_covar_dot_kern,
-                                         self.gaussian_mixture.means[component_index, i],
+                                         m_u,
                                          self.num_samples))
+            sample_means[i] =  sample_means[i] + self.GP_mean[i] # non-zero mean GP prior: b = fbar + A(m - mubar)
+            samples[:, :, i] = samples[:, :, i] + self.GP_mean[i] # non-zero mean GP prior: b = fbar + A(m - mubar)
         return normal_samples, sample_means, sample_vars, samples
 
     def _compile_get_samples_partition():

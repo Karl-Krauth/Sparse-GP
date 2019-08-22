@@ -610,11 +610,29 @@ def seismic_experiment(method, components, sparsity_factor, run_id,
                        optimize_stochastic=False):
     name = 'seismic'
     data = data_source.seismic_data()[0]
-    kernel = get_kernels(data['train_inputs'].shape[1], 8, True)
-    cond_ll = likelihood.SeismicLL(4)
 
-    transform = data_transformation.MeanStdTransformation(data['train_inputs'],
-                                                          data['train_outputs'])
+    # prior_var = np.array([900, 5625, 57600, 108900, 38025, 52900, 75625, 133225])
+    # prior_mu = [200, 500, 1600, 2200, 1950, 2300, 2750, 3650]
+    # sigma2y = [0.0006, 0.0025, 0.0056, 0.0100]
+
+    scale_factor = 10.  # for numerical reasons (final predicitons to be post-processed)
+    mean_depth = np.array([200.0, 500.0, 1600.0, 2200.0], dtype=np.double)
+    mean_vel = np.array([1950.0, 2300.0, 2750.0, 3650.0], dtype=np.double)
+    std_depth = mean_depth * 0.15
+    std_vel = mean_vel * 0.10
+    prior_mu = np.hstack((mean_depth, mean_vel)) / scale_factor
+    prior_var = np.square(np.hstack((std_depth, std_vel))) / (scale_factor * scale_factor)
+    sigma2y = np.square([0.025, 0.05, 0.075, 0.1])
+
+    input_dim = data['train_inputs'].shape[1]
+
+    kernel = [ExtRBF(input_dim, variance=prior_var[i], lengthscale=np.array((1,)), ARD=True) for i in range(len(prior_var))]
+
+    cond_ll = likelihood.SeismicLL(4, sigma2y)
+
+    transform = data_transformation.IdentityTransformation(data['train_inputs'], data['train_outputs'])
+    #transform = data_transformation.MeanStdXTransformation(data['train_inputs'], data['train_outputs'])
+
     return run_model.run_model(data['train_inputs'],
                                data['train_outputs'],
                                data['test_inputs'],
@@ -628,14 +646,18 @@ def seismic_experiment(method, components, sparsity_factor, run_id,
                                sparsity_factor,
                                transform,
                                False,
-                               False,
-                               optimization_config={'mog': 5, 'hyp': 2, 'inducing': 1},
-                               max_iter=200,
+                               True,
+                               optimization_config={'mog': 100},
+                               # max_iter=10,
                                partition_size=partition_size,
-                               ftol=10,
+                               # ftol=1,
                                n_threads=n_threads,
                                model_image_dir=image,
-                               optimize_stochastic=optimize_stochastic)
+                               GP_mean=prior_mu,
+                               init_var=0.001*prior_var,
+                               num_samples=100000,
+                               )
+
 
 if __name__ == '__main__':
-    seismic_experiment('full', 1, 0.1, 1, None)
+    seismic_experiment('full', 1, 1.0, 1, None)

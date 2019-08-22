@@ -18,11 +18,15 @@ class DiagonalGaussianMixture(gaussian_mixture.GaussianMixture):
      invC_klj_Sk : ndarray
       (s[k,j] + s[l,j])^-1 * s[k,j]
     """
-    def __init__(self, num_components, num_latent, initial_mean):
+    def __init__(self, num_components, num_latent, initial_mean, init_var=None):
         gaussian_mixture.GaussianMixture.__init__(self, num_components, num_latent, initial_mean)
         self.invC_klj_Sk = np.empty((self.num_components, self.num_components, self.num_latent, self.num_dim), dtype=np.float32)
-        self.covars = np.random.uniform(low=0.5, high=0.5, size=(self.num_components, self.num_latent, self.num_dim)).astype(np.float32)
-        self.log_s = np.log(self.covars)
+        if init_var is not None:
+            self.covars = np.tile(init_var, [self.num_components, 1, self.num_dim])
+            self.log_s = np.log(self.covars)
+        else:
+            self.covars = np.random.uniform(low=0.5, high=0.5, size=(self.num_components, self.num_latent, self.num_dim)).astype(np.float32)
+            self.log_s = np.log(self.covars)
         self._update()
 
     def get_params(self):
@@ -73,8 +77,9 @@ class DiagonalGaussianMixture(gaussian_mixture.GaussianMixture):
     def a_dot_covar_dot_a(self, a, k, j):
         return np.diagonal(mdot(a, np.diag(self.covars[k, j, :]), a.T))
 
-    def mean_prod_sum_covar(self, k, j):
-        return mdot(self.means[k, j, np.newaxis].T, self.means[k, j, np.newaxis]) + np.diag(self.covars[k, j])
+    def mean_prod_sum_covar(self, k, j, offset=0):
+        mu = self.means[k, j, np.newaxis] - offset
+        return mdot(mu.T, ) + np.diag(self.covars[k, j])
 
     def grad_trace_a_inv_dot_covars(self, chol_a, k, j):
         a_inv = util.inv_chol(chol_a)

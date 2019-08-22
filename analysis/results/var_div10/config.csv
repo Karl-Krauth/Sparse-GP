@@ -1,0 +1,2 @@
+total_time,run_id,max_iter,optimization_config,xtol,git_hash,model_init,ftol,latent_noise:,sparsity_factor,ll,total_evals,sample_num,experiment,git_branch,random_Z,method
+1822.0387599468231,1,10,{'mog': 12000},0.001,fb8454f9a08927c0371669dbcd84c7874119ba53,,1,0.001,1.0,SeismicLL,223,100000,seismic,seismic,False,full

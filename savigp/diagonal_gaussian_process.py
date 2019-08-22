@@ -1,6 +1,6 @@
 from GPy.util.linalg import mdot
 from scipy.misc import logsumexp
-from util import weighted_average, log_diag_gaussian
+from util import average_ctrl_variates, log_diag_gaussian
 import numpy as np
 
 
@@ -15,21 +15,21 @@ class DiagonalGaussianProcess(gaussian_process.GaussianProcess):
 
     def __init__(self, train_inputs, train_outputs, num_inducing, num_components, num_samples, kernels,
                  likelihood, latent_noise=0, exact_ell=False, inducing_on_inputs=False,
-                 num_threads=1, partition_size=3000):
+                 num_threads=1, partition_size=3000, GP_mean=None, init_var=None):
         super(DiagonalGaussianProcess, self).__init__(
                                                       train_inputs, train_outputs, num_inducing,
                                                       num_components, num_samples, kernels, likelihood,
                                                       latent_noise, exact_ell, inducing_on_inputs,
-                                                      num_threads, partition_size)
+                                                      num_threads, partition_size, GP_mean=GP_mean, init_var=init_var)
 
-    def _get_gaussian_mixture(self, initial_mean):
+    def _get_gaussian_mixture(self, initial_mean, init_var=None):
         return diagonal_gaussian_mixture.DiagonalGaussianMixture(
-            self.num_components, self.num_latent, initial_mean)
+            self.num_components, self.num_latent, initial_mean, init_var=None)
 
     def _grad_ell_over_covars(self, component_index, conditional_ll, kernel_products, sample_vars, normal_samples):
         grad = np.empty([self.num_latent] + self.gaussian_mixture.get_covar_shape())
         for i in xrange(self.num_latent):
-            s = weighted_average(conditional_ll, (np.square(normal_samples[i]) - 1) / sample_vars[i], self.num_samples)
+            s = average_ctrl_variates(conditional_ll, (np.square(normal_samples[i]) - 1) / sample_vars[i], self.num_samples)
             grad[i] = (mdot(s, np.square(kernel_products[i])) * self.gaussian_mixture.weights[component_index] / 2.)
         return grad
 
