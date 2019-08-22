@@ -460,7 +460,7 @@ class GaussianProcess(object):
         num_partitions = ((train_data.shape[0] + partition_size - 1) / partition_size)
         return np.array_split(train_data, num_partitions)
 
-    def _get_gaussian_mixture(self, initial_mean):
+    def _get_gaussian_mixture(self, initial_mean, initial_var):
         """Get the mixture of Gaussians used for representing the posterior distribution."""
         raise NotImplementedError
 

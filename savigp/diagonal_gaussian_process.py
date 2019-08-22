@@ -22,7 +22,7 @@ class DiagonalGaussianProcess(gaussian_process.GaussianProcess):
                                                       latent_noise, exact_ell, inducing_on_inputs,
                                                       num_threads, partition_size, GP_mean=GP_mean, init_var=init_var)
 
-    def _get_gaussian_mixture(self, initial_mean):
+    def _get_gaussian_mixture(self, initial_mean, init_var=None):
         return diagonal_gaussian_mixture.DiagonalGaussianMixture(
             self.num_components, self.num_latent, initial_mean, init_var=None)
 
