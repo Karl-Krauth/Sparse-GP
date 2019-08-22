@@ -1,10 +1,11 @@
 """This module contains the implementation of the full gaussian process class."""
 from GPy.util.linalg import mdot
 import numpy as np
-import torch
 
 import full_gaussian_mixture
 import gaussian_process
+import theano
+from theano import tensor
 import util
 
 
@@ -43,7 +44,7 @@ class FullGaussianProcess(gaussian_process.GaussianProcess):
 
     def _grad_cross_over_covars(self):
             grad = np.empty([self.num_components, self.num_latent,
-                             self.gaussian_mixture.get_covar_size()], dtype=util.PRECISION)
+                             self.gaussian_mixture.get_covar_size()], dtype=np.float32)
             for j in xrange(self.num_latent):
                 grad_trace = self.gaussian_mixture.grad_trace_a_inv_dot_covars(
                     self.kernel_matrix.cholesky[j], 0, j)
@@ -55,23 +56,26 @@ class FullGaussianProcess(gaussian_process.GaussianProcess):
                               sample_vars, normal_samples):
         assert (component_index == 0)
         grad = np.empty([self.num_latent] + self.gaussian_mixture.get_covar_shape(),
-                        dtype=util.PRECISION)
+                        dtype=np.float32)
         for i in xrange(self.num_latent):
             average = util.weighted_average(
                 conditional_ll, (normal_samples[i] ** 2 - 1) / sample_vars[i], self.num_samples)
-            grad[i] = self._torch_grad_ell_over_covars(kernel_products[i], average)
+            grad[i] = self._theano_grad_ell_over_covars(kernel_products[i], average)
 
         return grad
 
-    @util.torchify
-    def _torch_grad_ell_over_covars(self, kernel_products, average):
-        return 0.5 * (kernel_products.t() * average).mm(kernel_products)
+    def _compile_grad_ell_over_covars():
+        kernel_products = tensor.matrix('kernel_products')
+        average = tensor.vector('average')
+        result = 0.5 * tensor.dot(kernel_products.T * average, kernel_products)
+        return theano.function([kernel_products, average], result)
+    _theano_grad_ell_over_covars = _compile_grad_ell_over_covars()
 
     def _calculate_entropy(self):
         return -self.gaussian_mixture.log_normal()
 
     def _grad_entropy_over_means(self):
-        return np.zeros([self.num_components, self.num_latent, self.num_inducing], dtype=util.PRECISION)
+        return np.zeros([self.num_components, self.num_latent, self.num_inducing], dtype=np.float32)
 
     def _grad_entropy_over_covars(self):
         return self.gaussian_mixture.transform_eye_grad()

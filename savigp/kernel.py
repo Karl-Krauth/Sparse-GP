@@ -1,8 +1,8 @@
 from GPy.kern import RBF
 from GPy.util.linalg import mdot
 import numpy as np
-import util
-import torch
+import theano
+import theano.tensor as tensor
 
 
 class ExtRBF(RBF):
@@ -45,26 +45,36 @@ class ExtRBF(RBF):
         if self.ARD:
             inv_dist = self._inverse_distances(X, X2)
             if X2 is None: X2 = X
-            variance_gradient, lengthscale_gradient = self._torch_get_gradients_AK_ARD(
-                X, X2, A, kernel, dk_dr.astype(util.PRECISION), inv_dist.astype(util.PRECISION),
-                self.lengthscale.astype(util.PRECISION), self.variance[0])
+            variance_gradient, lengthscale_gradient = self._theano_get_gradients_AK_ARD(
+                X, X2, A, kernel, dk_dr.astype(np.float32), inv_dist.astype(np.float32),
+                self.lengthscale.astype(np.float32), self.variance[0])
         else:
             variance_gradient = np.core.umath_tests.inner1d(kernel, A) / self.variance
             dL_dr = (self.dK_dr_via_X(X, X2) * A)
             r = self._scaled_dist(X, X2)
             lengthscale_gradient = -np.sum(dL_dr*r, axis=1)/self.lengthscale
             lengthscale_gradient = lengthscale_gradient[:, np.newaxis]
-        return np.hstack((variance_gradient[:, np.newaxis], lengthscale_gradient)).astype(util.PRECISION)
+        return np.hstack((variance_gradient[:, np.newaxis], lengthscale_gradient)).astype(np.float32)
 
-    @util.torchify
-    def _torch_get_gradients_AK_ARD(self, X, X2, A, kernel, kd_dr, inv_dist, lengthscale, variance):
+    def _compile_get_gradients_AK_ARD():
+        X = tensor.matrix('X')
+        X2 = tensor.matrix('X2')
+        A = tensor.matrix('A')
+        kernel = tensor.matrix('kernel')
+        dk_dr = tensor.matrix('dk_dr')
+        inv_dist = tensor.matrix('inv_dist')
+        lengthscale = tensor.vector('lengthscale')
+        variance = tensor.scalar('variance')
+
         tmp = dk_dr * A * inv_dist
-        variance_gradient = torch.sum(kernel * A, dim=1) / variance
-        lengthscale_gradient = -(torch.sum(
-            tmp[:, :, np.newaxis] * (X[:, np.newaxis, :] - X2[np.newaxis, :, :]) ** 2,
-            dim=1) / lengthscale ** 3)
+        variance_gradient = tensor.sum(kernel * A, axis=1) / variance
+        lengthscale_gradient = -(tensor.sum(
+            tmp[:, :, np.newaxis] * tensor.square(X[:, np.newaxis, :] - X2[np.newaxis, :, :]),
+            axis=1) / lengthscale ** 3)
 
-        return variance_gradient, lengthscale_gradient
+        return theano.function([X, X2, A, kernel, dk_dr, inv_dist, lengthscale, variance],
+                               [variance_gradient, lengthscale_gradient])
+    _theano_get_gradients_AK_ARD = _compile_get_gradients_AK_ARD()
 
     def kernel(self, points1, points2=None):
         if points2 is None:
@@ -74,23 +84,28 @@ class ExtRBF(RBF):
             length_scale = self.lengthscale
         else:
             length_scale = self.lengthscale.repeat(self.input_dim)
-        kernel_value = self._torch_kernel(self.variance[0], length_scale.astype(util.PRECISION), points1, points2)
+        kernel_value = self._theano_kernel(self.variance[0], length_scale.astype(np.float32), points1, points2)
         if points1 is points2:
-            kernel_value += self.white_noise * np.eye(kernel_value.shape[0], dtype=util.PRECISION)
+            kernel_value += self.white_noise * np.eye(kernel_value.shape[0], dtype=np.float32)
 
         return kernel_value
 
-    @util.torchify
-    def _torch_kernel(self, variance, length_scale, points1, points2):
+    def _compile_kernel():
+        variance = tensor.scalar('variance')
+        length_scale = tensor.vector('length_scale')
+        points1 = tensor.matrix('points1')
+        points2 = tensor.matrix('points2')
+
         scaled_points1 = points1 / length_scale
         scaled_points2 = points2 / length_scale
-        magnitude_square1 = torch.sum(scaled_points1 ** 2, dim=1)
-        magnitudes_square2 = torch.sum(scaled_points2 ** 2, dim=1)
-        distances = (magnitude_square1[:, None] - 2 * scaled_points1.mm(scaled_points2.t()) +
-                     magnitudes_square2[:, None].t())
+        magnitude_square1 = tensor.sum(tensor.sqr(scaled_points1), 1)
+        magnitudes_square2 = tensor.sum(tensor.sqr(scaled_points2), 1)
+        distances = (magnitude_square1[:, None] - 2 * tensor.dot(scaled_points1, scaled_points2.T) +
+                     magnitudes_square2.T)
 
-        kernel_value = variance * torch.exp(-distances / 2.0)
-        return kernel_value
+        kernel_value = variance * tensor.exp(-distances / 2.0)
+        return theano.function([variance, length_scale, points1, points2], kernel_value)
+    _theano_kernel = _compile_kernel()
 
     def grad_kernel_over_dist(self, points1, points2=None):
         if points2 is None:
@@ -99,24 +114,30 @@ class ExtRBF(RBF):
             length_scale = self.lengthscale
         else:
             length_scale = self.lengthscale.repeat(self.input_dim)
-        grad_kernel = self._torch_grad_kernel_over_dist(
-            self.variance[0], length_scale.astype(util.PRECISION), points1, points2)
+        grad_kernel = self._theano_grad_kernel_over_dist(
+            self.variance[0], length_scale.astype(np.float32), points1, points2)
         return grad_kernel
 
-    @util.torchify
-    def _torch_grad_kernel_over_dist(self, variance, length_scale, points1, points2):
+    def _compile_grad_kernel_over_dist():
+        variance = tensor.scalar('variance')
+        length_scale = tensor.vector('length_scale')
+        points1 = tensor.matrix('points1')
+        points2 = tensor.matrix('points2')
+
         scaled_points1 = points1 / length_scale
         scaled_points2 = points2 / length_scale
-        magnitude_square1 = torch.sum(scaled_points1 ** 2, dim=1)
-        magnitudes_square2 = torch.sum(scaled_points2 ** 2, dim=1)
-        distances = (magnitude_square1[:, None] - 2 * scaled_points1.mm(scaled_points2.t()) +
-                     magnitudes_square2[:, None].t())
-        distances = torch.clamp(distances, 0, np.inf)
-        grad_kernel = -torch.sqrt(distances) * variance * torch.exp(-distances / 2.0)
-        return grad_kernel
+        magnitude_square1 = tensor.sum(tensor.sqr(scaled_points1), 1)
+        magnitudes_square2 = tensor.sum(tensor.sqr(scaled_points2), 1)
+        distances = (magnitude_square1[:, None] - 2 * tensor.dot(scaled_points1, scaled_points2.T) +
+                     magnitudes_square2.T)
+        distances = tensor.clip(distances, 0, np.inf)
+
+        grad_kernel = -tensor.sqrt(distances) * variance * tensor.exp(-distances / 2.0)
+        return theano.function([variance, length_scale, points1, points2], grad_kernel)
+    _theano_grad_kernel_over_dist = _compile_grad_kernel_over_dist()
 
     def diag_kernel(self, points):
-        return (self.variance.astype(util.PRECISION) + self.white_noise) * np.ones(points.shape[0], dtype=util.PRECISION)
+        return (self.variance.astype(np.float32) + self.white_noise) * np.ones(points.shape[0], dtype=np.float32)
 
     def _inverse_distances(self, points1, points2=None):
         distances = self._distances(points1, points2)
@@ -129,20 +150,25 @@ class ExtRBF(RBF):
             length_scale = self.lengthscale
         else:
             length_scale = self.lengthscale.repeat(self.input_dim)
-        distances = self._torch_distance(length_scale.astype(util.PRECISION), points1, points2)
+        distances = self._theano_distance(length_scale.astype(np.float32), points1, points2)
         return distances
 
-    @util.torchify
-    def _torch_distance(self, length_scale, points1, points2):
+    def _compile_distance():
+        length_scale = tensor.vector('length_scale')
+        points1 = tensor.matrix('points1')
+        points2 = tensor.matrix('points2')
+
         scaled_points1 = points1 / length_scale
         scaled_points2 = points2 / length_scale
-        magnitude_square1 = torch.sum(scaled_points1 ** 2, dim=1)
-        magnitudes_square2 = torch.sum(scaled_points2 ** 2, dim=1)
+        magnitude_square1 = tensor.sum(tensor.sqr(scaled_points1), 1)
+        magnitudes_square2 = tensor.sum(tensor.sqr(scaled_points2), 1)
         distances_sqr = (
-            magnitude_square1[:, None] - 2 * scaled_points1.mm(scaled_points2.t()) +
-            magnitudes_square2[:, None].t())
-        distances = torch.sqrt(torch.clamp(distances_sqr, 0.0, np.inf))
-        return distances
+            magnitude_square1[:, None] - 2 * tensor.dot(scaled_points1, scaled_points2.T) +
+            magnitudes_square2.T)
+        distances = tensor.sqrt(tensor.clip(distances_sqr, 0.0, np.inf))
+
+        return theano.function([length_scale, points1, points2], distances)
+    _theano_distance = _compile_distance()
 
     def get_gradients_Kdiag(self, X):
         r"""
@@ -164,7 +190,7 @@ class ExtRBF(RBF):
         """
 
         variance_gradient = self.Kdiag(X) * 1./self.variance
-        return np.hstack((variance_gradient[:, np.newaxis], np.zeros((X.shape[0], self.lengthscale.shape[0])))).astype(util.PRECISION)
+        return np.hstack((variance_gradient[:, np.newaxis], np.zeros((X.shape[0], self.lengthscale.shape[0])))).astype(np.float32)
 
     def get_gradients_SKD(self, S, D, X, X2=None):
         r"""
@@ -196,26 +222,37 @@ class ExtRBF(RBF):
             inv_dist = self._inverse_distances(X, X2)
             if X2 is None:
                 X2 = X
-            variance_gradient, lengthscale_gradient = self._torch_get_gradients_SKD_ARD(
-                S, D, X, X2, kernel, inv_dist, self.lengthscale.astype(util.PRECISION),
-                self.variance[0].astype(util.PRECISION), dk_dr)
+            variance_gradient, lengthscale_gradient = self._theano_get_gradients_SKD_ARD(
+                S, D, X, X2, kernel, inv_dist, self.lengthscale.astype(np.float32),
+                self.variance[0].astype(np.float32), dk_dr)
         else:
             scaled_dist = self._scaled_dist(X, X2)
             variance_gradient = mdot(S, kernel, D) * 1. / self.variance
             lengthscale_gradient = np.diagonal(-mdot(S, (scaled_dist * dk_dr).T, D) / self.lengthscale)[:, np.newaxis]
 
-        return np.hstack((np.diagonal(variance_gradient)[:, np.newaxis], lengthscale_gradient)).astype(util.PRECISION)
+        return np.hstack((np.diagonal(variance_gradient)[:, np.newaxis], lengthscale_gradient)).astype(np.float32)
 
-    @util.torchify
-    def _torch_get_gradients_SKD_ARD(self, S, D, X, X2, kernel, inv_dist, length_scale, variance, dk_dr):
+    def _compile_get_gradients_SKD_ARD():
+        S = tensor.matrix('S')
+        D = tensor.matrix('D')
+        X = tensor.matrix('X')
+        X2 = tensor.matrix('X2')
+        kernel = tensor.matrix('kernel')
+        inv_dist = tensor.matrix('inv_dist')
+        length_scale = tensor.vector('length_scale')
+        variance = tensor.scalar('variance')
+        dk_dr = tensor.matrix('dk_dr')
+
         diff = X[:, np.newaxis, :] - X2[np.newaxis, :, :]
-        x_xl3 = ((diff ** 2) * (inv_dist * dk_dr)[:, :, np.newaxis]).transpose(0, 1)
+        x_xl3 = (tensor.sqr(diff) * (inv_dist * dk_dr)[:, :, np.newaxis]).swapaxes(0, 1)
 
-        variance_gradient = S.mm(kernel).mm(D) / variance
-        lengthscale_gradient = -(torch.sum(D.t()[:, :, np.newaxis] * S.mm(x_xl3), dim=1) /
+        variance_gradient = tensor.dot(tensor.dot(S, kernel), D) / variance
+        lengthscale_gradient = -(tensor.sum(D.T[:, :, np.newaxis] * tensor.dot(S, x_xl3), axis=1) /
                                  length_scale ** 3)
 
-        return variance_gradient, lengthscale_gradient
+        return theano.function([S, D, X, X2, kernel, inv_dist, length_scale, variance, dk_dr],
+                               [variance_gradient, lengthscale_gradient])
+    _theano_get_gradients_SKD_ARD = _compile_get_gradients_SKD_ARD()
 
     def get_gradients_X_SKD(self, S, D, X):
         r"""
@@ -247,21 +284,30 @@ class ExtRBF(RBF):
         else:
             length_scale = self.lengthscale.repeat(self.input_dim)
 
-        ret = self._torch_get_gradients_X_SKD(X, X2, S, D, inv_dist, dk_dr,
-                                              length_scale.astype(util.PRECISION))
+        ret = self._theano_get_gradients_X_SKD(X, X2, S, D, inv_dist, dk_dr,
+                                                length_scale.astype(np.float32))
 
         return ret
 
-    @util.torchify
-    def _torch_get_gradients_X_SKD(self, X, X2, S, D, inv_dist, dk_dr, length_scale):
+    def _compile_get_gradients_X_SKD():
+        X = tensor.matrix('X')
+        X2 = tensor.matrix('X2')
+        S = tensor.matrix('S')
+        D = tensor.matrix('D')
+        inv_dist = tensor.matrix('inv_dist')
+        dk_dr = tensor.matrix('dk_dr')
+        length_scale = tensor.vector('length_scale')
+
         tmp = inv_dist * dk_dr
-        tmp2 = tmp[None, :, :] * (X.t()[:, :, None] - X2.t()[:, None, :])
-        ret = (tmp2.matmul(D).transpose(1, 2) * S[None, :, :] +
-               tmp2.matmul(S.t()).transpose(1, 2) * D.t()[None, :, :])
-        # TODO: this might be wrong. need to test this.
-        ret = ret.transpose(0, 1).transpose(1, 2)
+        tmp2 = tmp[None, :, :] * (X.T[:, :, None] - X2.T[:, None, :])
+        ret = (theano.dot(tmp2, D).swapaxes(1, 2) * S[None, :, :] +
+               theano.dot(tmp2, S.T).swapaxes(1, 2) * D.T[None, :, :])
+        ret = ret.T.swapaxes(0, 1)
         ret /= length_scale ** 2
-        return ret
+
+        return theano.function([X, X2, S, D, inv_dist, dk_dr, length_scale], ret)
+
+    _theano_get_gradients_X_SKD = _compile_get_gradients_X_SKD()
 
     def get_gradients_X_AK(self, A, X, X2):
         r"""
@@ -298,14 +344,22 @@ class ExtRBF(RBF):
         else:
             length_scale = self.lengthscale.repeat(self.input_dim)
 
-        ret = self._torch_get_gradients_X_AK(X, X2, inv_dist, dk_dr, A,
-                                              length_scale.astype(util.PRECISION))
+        ret = self._theano_get_gradients_X_AK(X, X2, inv_dist, dk_dr, A,
+                                              length_scale.astype(np.float32))
 
         return ret
 
-    @util.torchify
-    def _torch_get_gradients_X_AK(self, X, X2, inv_dist, dk_dr, A, length_scale):
+    def _compile_get_gradients_X_AK():
+        X = tensor.matrix('X')
+        X2 = tensor.matrix('X2')
+        inv_dist = tensor.matrix('inv_dist')
+        dk_dr = tensor.matrix('dk_dr')
+        A = tensor.matrix('A')
+        length_scale = tensor.vector('lengthscale')
+
         tmp = inv_dist * dk_dr * A
-        ret = tmp.t()[:, :, None] * (X[None, :, :] - X2[:, None, :])
+        ret = tmp.T[:, :, None] * (X[None, :, :] - X2[:, None, :])
         ret /= length_scale ** 2
-        return ret
+
+        return theano.function([X, X2, inv_dist, dk_dr, A, length_scale], ret)
+    _theano_get_gradients_X_AK = _compile_get_gradients_X_AK()

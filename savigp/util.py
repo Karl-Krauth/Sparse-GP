@@ -8,19 +8,15 @@ from scipy import linalg
 from scipy.linalg import det, inv, lapack
 from GPy.util.linalg import mdot, dpotri
 import numpy as np
-import torch
-
-PRECISION = np.float64
-TORCH_PRECISION = torch.double 
 
 
 class PosDefMatrix(object):
     def __init__(self, num_latent, num_inducing):
         self.is_outdated = True
-        self.matrix = np.empty([num_latent, num_inducing, num_inducing], dtype=PRECISION)
-        self.inverse = np.empty([num_latent, num_inducing, num_inducing], dtype=PRECISION)
-        self.cholesky = np.empty([num_latent, num_inducing, num_inducing], dtype=PRECISION)
-        self.log_determinant = np.empty([num_latent], dtype=PRECISION)
+        self.matrix = np.empty([num_latent, num_inducing, num_inducing], dtype=np.float32)
+        self.inverse = np.empty([num_latent, num_inducing, num_inducing], dtype=np.float32)
+        self.cholesky = np.empty([num_latent, num_inducing, num_inducing], dtype=np.float32)
+        self.log_determinant = np.empty([num_latent], dtype=np.float32)
 
     def update(self, kernels, inducing_locations):
         if not self.is_outdated:
@@ -37,14 +33,6 @@ class PosDefMatrix(object):
     def set_outdated(self):
         self.is_outdated = True
 
-def torchify(func):
-    def wrapper(*args):
-        new_args = [torch.from_numpy(arg) if isinstance(arg, np.ndarray) else arg for arg in args]
-        result = func(*new_args)
-        if isinstance(result, tuple):
-            return tuple(res.numpy() for res in result)
-        return result.numpy()
-    return wrapper
 
 def weighted_average(weights, points, num_samples):
     """

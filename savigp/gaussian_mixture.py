@@ -8,7 +8,6 @@ represented internally.
 """
 from GPy.util.linalg import mdot
 import numpy as np
-import util
 
 
 class GaussianMixture(object):
@@ -35,15 +34,15 @@ class GaussianMixture(object):
         self.num_dim = initial_mean.shape[1]
 
         self.means = np.empty([self.num_components, self.num_latent, self.num_dim],
-                              dtype=util.PRECISION)
-        self.weights = np.empty(self.num_components, dtype=util.PRECISION)
-        self.unnormalized_weights = np.empty(self.num_components, dtype=util.PRECISION)
+                              dtype=np.float32)
+        self.weights = np.empty(self.num_components, dtype=np.float32)
+        self.unnormalized_weights = np.empty(self.num_components, dtype=np.float32)
 
         for i in xrange(self.num_components):
             self.means[i] = initial_mean
 
         self.set_weights(np.random.uniform(low=1.0, high=5.0, size=self.num_components).
-                         astype(util.PRECISION))
+                         astype(np.float32))
 
     def get_params(self):
         """
@@ -155,8 +154,8 @@ class GaussianMixture(object):
         ndarray
             The gradient with respect to the raw weights. Dimension: num_components.
         """
-        pit = np.repeat(np.array([self.weights.T], dtype=util.PRECISION), self.num_components, 0)
-        dpi_dx = pit * (-pit.T + np.eye(self.num_components, dtype=util.PRECISION))
+        pit = np.repeat(np.array([self.weights.T], dtype=np.float32), self.num_components, 0)
+        dpi_dx = pit * (-pit.T + np.eye(self.num_components, dtype=np.float32))
         return mdot(internal_grad, dpi_dx)
 
     def get_covar_shape(self):
