@@ -3,13 +3,13 @@ from GPy.util.linalg import mdot
 import numpy as np
 import scipy
 
-import gaussian_mixture
+from savigp.gaussian_mixture import GaussianMixture
 import theano
 from theano import tensor
-import util
+from savigp import util
 
 
-class FullGaussianMixture(gaussian_mixture.GaussianMixture):
+class FullGaussianMixture(GaussianMixture):
     """
     Represents a full mixture of Gaussians with a single component.
 
@@ -42,7 +42,7 @@ class FullGaussianMixture(gaussian_mixture.GaussianMixture):
 
     def set_covars(self, raw_covars):
         raw_covars = raw_covars.reshape([self.num_latent, self.get_covar_size()])
-        for j in xrange(self.num_latent):
+        for j in range(self.num_latent):
             cholesky = np.zeros([self.num_dim, self.num_dim], dtype=np.float32)
             cholesky[np.tril_indices_from(cholesky)] = raw_covars[j]
             cholesky[np.diag_indices_from(cholesky)] = np.exp(
@@ -52,7 +52,7 @@ class FullGaussianMixture(gaussian_mixture.GaussianMixture):
 
     def log_normal(self):
         log_normal = -0.5 * (self.num_latent * self.num_dim * np.log(2 * np.pi) + np.log(2))
-        for i in xrange(self.num_latent):
+        for i in range(self.num_latent):
             log_normal -= 0.5 * util.pddet(self.covars_cholesky[i])
         return log_normal.astype(np.float32)
 
@@ -120,7 +120,7 @@ class FullGaussianMixture(gaussian_mixture.GaussianMixture):
 
     def _get_raw_covars(self):
         flattened_covars = np.empty([self.num_latent, self.get_covar_size()], dtype=np.float32)
-        for i in xrange(self.num_latent):
+        for i in range(self.num_latent):
             raw_covars = self.covars_cholesky[i].copy()
             raw_covars[np.diag_indices_from(raw_covars)] = np.log(
                 raw_covars[np.diag_indices_from(raw_covars)])

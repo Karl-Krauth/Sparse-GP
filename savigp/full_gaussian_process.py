@@ -2,14 +2,14 @@
 from GPy.util.linalg import mdot
 import numpy as np
 
-import full_gaussian_mixture
-import gaussian_process
+from savigp.full_gaussian_mixture import FullGaussianMixture
+from savigp.gaussian_process import GaussianProcess
 import theano
 from theano import tensor
-import util
+from savigp import util
 
 
-class FullGaussianProcess(gaussian_process.GaussianProcess):
+class FullGaussianProcess(GaussianProcess):
     """
     The concrete class containing the implementation of scalable variational inference of gaussian
     processes where the posterior distribution consists of a single component gaussian.
@@ -46,12 +46,12 @@ class FullGaussianProcess(gaussian_process.GaussianProcess):
                                                   )
 
     def _get_gaussian_mixture(self, initial_mean, init_var=None):
-        return full_gaussian_mixture.FullGaussianMixture(self.num_latent, initial_mean, init_var)
+        return FullGaussianMixture(self.num_latent, initial_mean, init_var)
 
     def _grad_cross_over_covars(self):
             grad = np.empty([self.num_components, self.num_latent,
                              self.gaussian_mixture.get_covar_size()], dtype=np.float32)
-            for j in xrange(self.num_latent):
+            for j in range(self.num_latent):
                 grad_trace = self.gaussian_mixture.grad_trace_a_inv_dot_covars(
                     self.kernel_matrix.cholesky[j], 0, j)
                 grad[0, j] = (-0.5 * grad_trace)
@@ -63,7 +63,7 @@ class FullGaussianProcess(gaussian_process.GaussianProcess):
         assert (component_index == 0)
         grad = np.empty([self.num_latent] + self.gaussian_mixture.get_covar_shape(),
                         dtype=np.float32)
-        for i in xrange(self.num_latent):
+        for i in range(self.num_latent):
             average = util.average_ctrl_variates(conditional_ll, (normal_samples[i] ** 2 - 1) / sample_vars[i], self.num_samples)
             grad[i] = self._theano_grad_ell_over_covars(kernel_products[i], average)
 

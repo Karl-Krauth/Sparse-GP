@@ -1,14 +1,14 @@
 """This module provides facilities for logging and exporting information relevant to a model."""
 import csv
-import cPickle
+import pickle
 import datetime
 import logging
 import os
 
 import numpy as np
 
-import gaussian_process
-import util
+import savigp.gaussian_process
+from savigp import util
 
 OUTPUT_PATH = '../results/'
 CONFIG_FILE_NAME = 'config.csv'
@@ -72,13 +72,13 @@ def export_training_data(X, Y, export_X=False):
         Whether to export 'X', if False only 'Y' will be exported.
     """
     if _log_folder_path is None:
-        print "Warning: logger is not initialized."
+        print("Warning: logger is not initialized.")
         return
 
     # Generate headers and prepare the data for output.
-    header = ['Y_%d' % (j) for j in xrange(Y.shape[1])]
+    header = ['Y_%d' % (j) for j in range(Y.shape[1])]
     if export_X:
-        header += ['X_%d' % (j) for j in xrange(X.shape[1])]
+        header += ['X_%d' % (j) for j in range(X.shape[1])]
         data = np.hstack((Y, X))
     else:
         data = Y
@@ -111,19 +111,19 @@ def export_predictions(X, true_Y, predicted_Y, predicted_variance, nlpd, export_
         (useful in large datasets).
     """
     if _log_folder_path is None:
-        print "Warning: logger is not initialized."
+        print("Warning: logger is not initialized.")
         return
 
     header = (
-        ['true_Y_%d' % (j) for j in xrange(true_Y.shape[1])] +
-        ['predicted_Y_%d' % (j) for j in xrange(predicted_Y[0].shape[1])] +
-        ['predicted_variance_%d' % (j) for j in xrange(predicted_variance[0].shape[1])] +
-        ['NLPD_%d' % (j) for j in xrange(nlpd.shape[1])]
+        ['true_Y_%d' % (j) for j in range(true_Y.shape[1])] +
+        ['predicted_Y_%d' % (j) for j in range(predicted_Y[0].shape[1])] +
+        ['predicted_variance_%d' % (j) for j in range(predicted_variance[0].shape[1])] +
+        ['NLPD_%d' % (j) for j in range(nlpd.shape[1])]
     )
     data = [true_Y] + predicted_Y + predicted_variance + [nlpd]
-    print true_Y.shape, nlpd.shape
+    # print true_Y.shape, nlpd.shape
     if export_X:
-        header += ['X_%d' % (j) for j in xrange(X.shape[1])]
+        header += ['X_%d' % (j) for j in range(X.shape[1])]
         data.append(X)
 
     # Collapse the header and the data.
@@ -145,7 +145,7 @@ def export_configuration(config):
         Configuration to be exported.
     """
     if _log_folder_path is None:
-        print "Warning: logger is not initialized."
+        print("Warning: logger is not initialized.")
         return
 
     file_path = os.path.join(_log_folder_path, CONFIG_FILE_NAME)
@@ -169,4 +169,4 @@ def snapshot_model(model, name=MODEL_FILE_NAME):
 
     file_path = os.path.join(_log_folder_path, name)
     with open(file_path, 'w') as model_file:
-        cPickle.dump(model, model_file, protocol=cPickle.HIGHEST_PROTOCOL)
+        pickle.dump(model, model_file, protocol=pickle.HIGHEST_PROTOCOL)

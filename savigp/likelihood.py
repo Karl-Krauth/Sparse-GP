@@ -13,7 +13,7 @@ import numpy as np
 
 import theano
 from theano import tensor
-from util import cross_ent_normal
+from savigp.util import cross_ent_normal
 
 
 class Likelihood:
@@ -267,7 +267,7 @@ class LogGaussianCox(Likelihood):
         return 1
 
 
-class LogisticLL(object, Likelihood):
+class LogisticLL(Likelihood):
     """
     Logistic likelihood
 
@@ -369,7 +369,7 @@ class SoftmaxLL(Likelihood):
         return self.dim
 
 
-class WarpLL(object, Likelihood):
+class WarpLL(Likelihood):
     """
     Implementation of a Warp likelihood.
 

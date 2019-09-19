@@ -1,14 +1,14 @@
 from GPy.util.linalg import mdot
 from scipy.misc import logsumexp
-from util import average_ctrl_variates, log_diag_gaussian
+from savigp.util import average_ctrl_variates, log_diag_gaussian
 import numpy as np
 
 
-import diagonal_gaussian_mixture
-import gaussian_process
+from savigp.diagonal_gaussian_mixture import DiagonalGaussianMixture
+from savigp.gaussian_process import GaussianProcess
 
 
-class DiagonalGaussianProcess(gaussian_process.GaussianProcess):
+class DiagonalGaussianProcess(GaussianProcess):
     """
     Implementation of the SAVIGP model in the case that posterior is the mixture of diagonal Gaussians.
     """
@@ -23,12 +23,12 @@ class DiagonalGaussianProcess(gaussian_process.GaussianProcess):
                                                       num_threads, partition_size, GP_mean=GP_mean, init_var=init_var)
 
     def _get_gaussian_mixture(self, initial_mean, init_var=None):
-        return diagonal_gaussian_mixture.DiagonalGaussianMixture(
+        return DiagonalGaussianMixture(
             self.num_components, self.num_latent, initial_mean, init_var=None)
 
     def _grad_ell_over_covars(self, component_index, conditional_ll, kernel_products, sample_vars, normal_samples):
         grad = np.empty([self.num_latent] + self.gaussian_mixture.get_covar_shape())
-        for i in xrange(self.num_latent):
+        for i in range(self.num_latent):
             s = average_ctrl_variates(conditional_ll, (np.square(normal_samples[i]) - 1) / sample_vars[i], self.num_samples)
             grad[i] = (mdot(s, np.square(kernel_products[i])) * self.gaussian_mixture.weights[component_index] / 2.)
         return grad
@@ -47,7 +47,7 @@ class DiagonalGaussianProcess(gaussian_process.GaussianProcess):
 
     def _update_log_likelihood(self):
         self.update_N_z()
-        gaussian_process.GaussianProcess._update_log_likelihood(self)
+        GaussianProcess._update_log_likelihood(self)
 
     def _grad_entropy_over_means(self):
         dent_dm = np.empty([self.num_components, self.num_latent, self.num_inducing])
@@ -65,7 +65,7 @@ class DiagonalGaussianProcess(gaussian_process.GaussianProcess):
         d ent \\ dm[k,j]. Dimensions: M * 1
         """
         m_k = np.zeros(self.num_inducing)
-        for l in xrange(self.num_components):
+        for l in range(self.num_components):
             m_k += (self.gaussian_mixture.weights[k] * self.gaussian_mixture.weights[l] *
                     (np.exp(self.log_N_kl[k, l] - self.log_z[k]) + np.exp(self.log_N_kl[k, l] -
                     self.log_z[l])) * (self.gaussian_mixture.C_m(j, k, l)))
