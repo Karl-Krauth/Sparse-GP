@@ -3,10 +3,13 @@ A thin wrapper around the GaussianProcess class and functions found in optimizer
 provides a scikit-like API.
 """
 
-import model_logging
-import optimizer
-from diagonal_gaussian_process import DiagonalGaussianProcess
-from full_gaussian_process import FullGaussianProcess
+import os.path
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from savigp import model_logging
+from savigp import optimizer
+from savigp.diagonal_gaussian_process import DiagonalGaussianProcess
+from savigp.full_gaussian_process import FullGaussianProcess
 
 class Savigp(object):
     """

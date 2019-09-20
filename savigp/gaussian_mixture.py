@@ -38,7 +38,7 @@ class GaussianMixture(object):
         self.weights = np.empty(self.num_components, dtype=np.float32)
         self.unnormalized_weights = np.empty(self.num_components, dtype=np.float32)
 
-        for i in xrange(self.num_components):
+        for i in range(self.num_components):
             self.means[i] = initial_mean
 
         self.set_weights(np.random.uniform(low=1.0, high=5.0, size=self.num_components).

@@ -6,9 +6,9 @@ import time
 import numpy as np
 import scipy.optimize
 
-import gaussian_process
-import model_logging
-import util
+from savigp import gaussian_process
+from savigp import model_logging
+from savigp import util
 
 # The parameter sets that must be bounded during optimization.
 PARAMETER_SETS_TO_BOUND = ['hyp', 'inducing']
@@ -87,9 +87,9 @@ def bfgs(model, max_fun=None, apply_bounds=False):
     starting_params = model.get_params()
     bounds = None
     if apply_bounds:
-        bounds = [(None, math.log(1e10)) for _ in xrange(starting_params.shape[0])]
+        bounds = [(None, math.log(1e10)) for _ in range(starting_params.shape[0])]
 
-    for num_tries in xrange(4):
+    for num_tries in range(4):
         try:
             scipy.optimize.fmin_l_bfgs_b(
                 func=wrapper.objective_function,
@@ -244,9 +244,9 @@ def sgd(model, num_batches, max_passes, idx):
     model.set_train_partitions(curr_train_index, num_batches)
     model.set_params(model.get_params())
 
-    for i in xrange(max_passes):
+    for i in range(max_passes):
         model.shuffle_data()
-        for j in xrange(model.get_num_partitions() / num_batches):
+        for j in range(model.get_num_partitions() / num_batches):
             old_params = model.get_params()
             grad_rms[idx] = (decay_rate * grad_rms[idx] + (1 - decay_rate) *
                              model.objective_function_gradients() ** 2)

@@ -1,11 +1,11 @@
 from GPy.util.linalg import mdot
 import numpy as np
+ 
+from savigp.gaussian_mixture import GaussianMixture
+from savigp import util
 
-import gaussian_mixture
-import util
 
-
-class DiagonalGaussianMixture(gaussian_mixture.GaussianMixture):
+class DiagonalGaussianMixture(GaussianMixture):
     """
     Implementation of a posterior distribution where the covariance matrix is a mixture of diagonal Gaussians.
     The class has to important internal field as follows:
@@ -19,7 +19,7 @@ class DiagonalGaussianMixture(gaussian_mixture.GaussianMixture):
       (s[k,j] + s[l,j])^-1 * s[k,j]
     """
     def __init__(self, num_components, num_latent, initial_mean, init_var=None):
-        gaussian_mixture.GaussianMixture.__init__(self, num_components, num_latent, initial_mean)
+        GaussianMixture.__init__(self, num_components, num_latent, initial_mean)
         self.invC_klj_Sk = np.empty((self.num_components, self.num_components, self.num_latent, self.num_dim), dtype=np.float32)
         if init_var is not None:
             self.covars = np.tile(init_var, [self.num_components, 1, self.num_dim])

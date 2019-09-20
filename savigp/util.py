@@ -22,7 +22,7 @@ class PosDefMatrix(object):
         if not self.is_outdated:
             return
 
-        for i in xrange(len(kernels)):
+        for i in range(len(kernels)):
             self.matrix[i] = kernels[i].kernel(inducing_locations[i])
             self.cholesky[i] = jitchol(self.matrix[i])
             self.inverse[i] = inv_chol(self.cholesky[i])
@@ -113,7 +113,7 @@ def jitchol(A, maxtries=5):
     else:
         diagA = np.diag(A)
         if np.any(diagA <= 0.):
-            raise JitChol, "not pd: non-positive diagonal elements"
+            raise JitChol("not pd: non-positive diagonal elements")
         jitter = diagA.mean() * 1e-6
         while maxtries > 0 and np.isfinite(jitter):
             try:
@@ -123,7 +123,7 @@ def jitchol(A, maxtries=5):
                 jitter *= 10
             finally:
                 maxtries -= 1
-        raise JitChol, "not positive definite, even with jitter."
+        raise JitChol("not positive definite, even with jitter.")
 
 
 def pddet(L):
